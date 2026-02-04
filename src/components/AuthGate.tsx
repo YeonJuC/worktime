@@ -61,7 +61,7 @@ export default function AuthGate(props: { children: (uid: string) => JSX.Element
   return (
     <div className="appShell">
       <header className="topBar">
-        <div className="brand">근무시간</div>
+        <div className="brand">Worktime-calendar</div>
         <button className="btn ghost" onClick={logout} title="로그아웃">
           로그아웃
         </button>

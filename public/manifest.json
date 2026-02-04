@@ -1,6 +1,6 @@
 {
-  "name": "근무시간",
-  "short_name": "근무시간",
+  "name": "worktime",
+  "short_name": "worktime",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#0f172a",

@@ -1112,3 +1112,158 @@ button{ cursor: pointer; }
     padding-bottom: calc(20px + env(safe-area-inset-bottom));
   }
 }
+/* =========================
+   Header logout button fix
+   ========================= */
+
+/* =========================
+   Header 로그아웃 버튼 모바일 보정
+   ========================= */
+
+/* 헤더 안에 있는 ghost 버튼만 타겟 */
+header .btn.ghost {
+  font-size: 14px;
+  padding: 8px 16px;
+  height: auto;
+  line-height: 1.1;
+  border-radius: 999px;
+}
+
+/* <= 448px */
+@media (max-width: 448px) {
+  header .btn.ghost {
+    font-size: 13px;
+    padding: 6px 14px;
+  }
+}
+
+/* <= 390px (핵심) */
+@media (max-width: 390px) {
+  header .btn.ghost {
+    font-size: 12px;      /* 글자 축소 */
+    padding: 5px 12px;    /* 버튼 높이 줄이기 */
+    min-height: unset;
+    line-height: 1;
+  }
+}
+@media (max-width: 390px) {
+  header .btn.ghost {
+    letter-spacing: -0.02em;
+  }
+}
+
+/* =========================
+   Header 로그아웃 버튼 캡슐 축소
+   ========================= */
+
+header .btn.ghost {
+  padding: 6px 14px;      /* 기본 가로 줄임 */
+  min-width: unset;       /* 🔥 가로 강제폭 제거 */
+  border-radius: 999px;
+}
+
+/* <= 448px */
+@media (max-width: 448px) {
+  header .btn.ghost {
+    padding: 5px 12px;
+  }
+}
+
+/* <= 390px (핵심) */
+@media (max-width: 390px) {
+  header .btn.ghost {
+    padding: 4px 10px;    /* 캡슐 가로 확 줄임 */
+    font-size: 12px;
+    letter-spacing: -0.02em;
+  }
+}
+/* =========================
+   Header 로그아웃 버튼 최종 압축
+   ========================= */
+
+header.topBar .btn.ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: fit-content;     /* 🔥 글자 기준 */
+  min-width: 0 !important;
+  padding: 4px 8px;
+
+  height: 30px;
+  line-height: 1;
+  white-space: nowrap;
+  border-radius: 999px;
+}
+
+header.topBar .brand {
+  flex-shrink: 0;
+}
+header.topBar .btn.ghost {
+  flex-shrink: 0;
+}
+
+/* 390px 이하에서 더 압축 */
+@media (max-width: 390px) {
+  header .btn.ghost {
+    padding: 3px 7px;
+    height: 28px;
+    font-size: 12px;
+    letter-spacing: -0.03em;
+  }
+}
+header.topBar .btn.ghost{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: auto !important;
+  min-width: 0 !important;      /* 🔥 중요 */
+  padding: 4px 8px !important;  /* 🔥 가로 줄임 */
+
+  height: 30px;
+  line-height: 1;
+  border-radius: 999px;
+  white-space: nowrap;          /* 줄바꿈 방지 */
+}
+
+@media (max-width: 390px){
+  header.topBar{
+    padding: 10px 12px;         /* 헤더 자체도 슬림하게(선택) */
+  }
+  header.topBar .btn.ghost{
+    padding: 3px 7px !important;
+    height: 28px;
+    font-size: 12px;
+    letter-spacing: -0.03em;
+  }
+}
+header.topBar .btn.ghost{
+  margin-left: 0 !important;
+
+  /* 🔥 늘어나는 원인들 제거 */
+  flex: 0 0 auto !important;     /* flex-grow 방지 */
+  width: auto !important;        /* 100% 같은 거 무력화 */
+  max-width: max-content !important;
+
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 0 !important;       /* min-width 강제 제거 */
+  padding: 4px 8px !important;   /* 가로 확 줄임 */
+
+  height: 30px !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+
+  border-radius: 999px;
+}
+
+@media (max-width: 390px){
+  header.topBar .btn.ghost{
+    padding: 3px 7px !important;
+    height: 28px !important;
+    font-size: 12px !important;
+  }
+}
