@@ -152,6 +152,9 @@ export default function EditSheet(props: {
           <div className="sheetBody">
             <div className="field">
               <div className="label">근무시간 옵션</div>
+              <div className="tiny muted" style={{ marginTop: 6 }}>
+                * 옵션 선택 후 아래에서 시간을 직접 수정할 수 있어요.
+              </div>
               <div className="chips">
                 {SHIFT_PRESETS.map((s) => (
                   <button
