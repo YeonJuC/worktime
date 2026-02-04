@@ -493,3 +493,27 @@ button{ cursor: pointer; }
 @media (max-width: 390px){
   .workHours{ display:none; }
 }
+
+.subTag{
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;     /* ✅ 줄바꿈 금지 */
+  word-break: keep-all;    /* ✅ 한글 분리 금지 */
+  flex: 0 0 auto;          /* ✅ 줄바꿈/늘어남 방지 */
+
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1;          /* ✅ 높이 안정화 */
+}
+
+.holDot{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;     /* ✅ 줄바꿈 금지 */
+  flex: 0 0 auto;
+}
