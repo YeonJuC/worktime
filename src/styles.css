@@ -98,7 +98,7 @@ button{ cursor: pointer; }
 .page{
   width: min(520px, 100%);
   margin: 0 auto;
-  padding: 16px 14px 40px;
+  padding: 16px 14px 0px;
 }
 
 .monthHeader{
@@ -691,4 +691,235 @@ button{ cursor: pointer; }
   background: rgba(99, 102, 241, .85);
   color: #fff;
   border-color: rgba(255,255,255,.10);
+}
+
+/* 캘린더를 감싸는 "큰 카드" 클래스에 적용 (예: .calendarCard, .calCard, .gridCard 등) */
+.calendarCard {
+  position: relative;
+  border-radius: 22px;
+
+  /* ✅ 배경은 카드에 붙인다 */
+  background: linear-gradient(
+    180deg,
+    rgba(30, 41, 59, 0.92),
+    rgba(15, 23, 42, 0.92)
+  );
+
+  /* ✅ 내용에 따라 늘어나게 */
+  height: auto !important;
+  min-height: unset !important;
+
+  /* ✅ 잘림 방지 */
+  overflow: visible !important;
+
+  /* ✅ 하단 여백 (마지막 주가 숨 쉬게) */
+  padding: 14px 12px 24px;
+}
+
+/* 유리 테두리 느낌(선택) */
+.calendarCard::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+}
+/* 날짜 그리드 (예: .calendarGrid, .grid, .cells 등) */
+.calendarGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+
+  /* ✅ 5주/6주 자동 대응 */
+  grid-auto-rows: minmax(62px, auto);
+
+  gap: 8px;
+
+  /* ❌ 있으면 끊김 원인이라 무조건 제거 */
+  height: auto !important;
+  min-height: unset !important;
+}
+.cell {
+  min-height: 62px;
+  height: auto;
+}
+@media (max-width: 390px) {
+  .calendarCard {
+    padding: 12px 10px 22px;
+    border-radius: 20px;
+  }
+  .calendarGrid {
+    gap: 6px;
+    grid-auto-rows: minmax(58px, auto);
+  }
+}
+.calendarCard {
+  padding-bottom: 32px; /* ✅ 여기로 내려보냄 */
+}
+
+/* =========================
+   Mobile responsive (<= 390px)
+   ========================= */
+
+/* 기본: 페이지 여백 + max width 안정화 */
+.page {
+  width: min(520px, 100%);
+  margin: 0 auto;
+  padding: 16px 14px 0; /* ✅ bottom padding 제거(끊김 방지) */
+}
+
+/* 캘린더 카드(캘린더 전체 감싸는 박스) - 너 프로젝트 클래스명에 맞춰 하나라도 적용됨 */
+.calendarCard,
+.calendarWrap,
+.calendarPanel,
+.calCard {
+  padding-bottom: 28px; /* ✅ 하단 숨 공간 */
+  border-radius: 22px;
+  overflow: visible;
+}
+
+/* 캘린더 그리드 */
+.calendarGrid,
+.grid,
+.cells {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  grid-auto-rows: minmax(64px, auto); /* ✅ 5~6주 달 자동 대응 */
+}
+
+/* 셀 내부 텍스트 줄바꿈/넘침 방지 */
+.cell,
+.dayCell {
+  min-height: 64px;
+  height: auto;
+  padding: 10px 8px;
+}
+
+/* 시간표시(07:30-17:00) / hours(8.5h) 잘리는 문제 방지 */
+.workRange,
+.rangeLine,
+.hours,
+.workHours {
+  line-height: 1.05;
+  word-break: keep-all;
+}
+
+/* --- <= 448px (일반 모바일) --- */
+@media (max-width: 448px) {
+  .page {
+    padding: 14px 12px 0;
+  }
+
+  .calendarCard,
+  .calendarWrap,
+  .calendarPanel,
+  .calCard {
+    border-radius: 20px;
+    padding: 12px 10px 26px;
+  }
+
+  .calendarGrid,
+  .grid,
+  .cells {
+    gap: 6px;
+    grid-auto-rows: minmax(60px, auto);
+  }
+
+  .cell,
+  .dayCell {
+    padding: 9px 7px;
+    min-height: 60px;
+  }
+
+  /* 셀 안 텍스트 크기 살짝 다운 */
+  .dayNum {
+    font-size: 15px;
+  }
+
+  .workRange,
+  .rangeLine {
+    font-size: 12px;
+    opacity: 0.95;
+  }
+
+  .hours,
+  .workHours {
+    font-size: 12px;
+  }
+}
+
+/* --- <= 390px (아이폰 SE급) --- */
+@media (max-width: 390px) {
+  .page {
+    padding: 12px 10px 0;
+  }
+
+  .calendarCard,
+  .calendarWrap,
+  .calendarPanel,
+  .calCard {
+    border-radius: 18px;
+    padding: 10px 8px 22px;
+  }
+
+  .calendarGrid,
+  .grid,
+  .cells {
+    gap: 5px;
+    grid-auto-rows: minmax(56px, auto);
+  }
+
+  .cell,
+  .dayCell {
+    padding: 8px 6px;
+    min-height: 56px;
+  }
+
+  /* 390px에서 "07:30-17:00" 2줄로 예쁘게 보이게 */
+  .workRange {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    align-items: center;
+    justify-content: center;
+    white-space: normal;
+  }
+
+  /* 너가 App.tsx에서 만든 구조 기준: ws / dash / we */
+  .workRange .dash {
+    display: none; /* '-' 숨기고 줄바꿈 */
+  }
+
+  .workRange .ws,
+  .workRange .we {
+    display: block;
+    font-size: 12px;
+    letter-spacing: -0.2px;
+  }
+
+  /* 시간(h)도 조금 작게 */
+  .workHours,
+  .hours {
+    margin-top: 4px;
+    font-size: 12px;
+  }
+
+  /* 메모 한 줄은 너무 길면 잘리게 */
+  .memoLine {
+    font-size: 11px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+/* --- iOS safe area (하단 홈바 겹침 방지) --- */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .calendarCard,
+  .calendarWrap,
+  .calendarPanel,
+  .calCard {
+    padding-bottom: calc(22px + env(safe-area-inset-bottom));
+  }
 }
