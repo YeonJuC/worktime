@@ -4,13 +4,12 @@ import { db } from "../firebase";
 import type { BulkPlan } from "../types";
 
 const DEFAULT_PLAN: BulkPlan = {
-  monThu: {
-    start: "07:30",
-    end: "17:00",
-    breakEnabled: true,
-    breakStart: "12:00",
-    breakEnd: "13:00",
-    preset: "FULL_730",
+  monThu: { 
+    start:"07:30", 
+    end:"17:00", 
+    breakEnabled:true, 
+    breakStart:"12:00", 
+    breakEnd:"13:00" 
   },
   fri: {
     start: "08:00",

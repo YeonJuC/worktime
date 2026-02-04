@@ -60,7 +60,14 @@ export default function BulkSheet(props: {
             <input
               type="checkbox"
               checked={plan.fri.breakEnabled}
-              onChange={(e) => setFri({ breakEnabled: e.target.checked })}
+              onChange={(e) => {
+                const on = e.target.checked;
+                setMonThu({
+                  breakEnabled: on,
+                  breakStart: on ? (plan.monThu.breakStart || "12:00") : "",
+                  breakEnd: on ? (plan.monThu.breakEnd || "13:00") : "",
+                });
+              }}
             />
             점심
           </label>

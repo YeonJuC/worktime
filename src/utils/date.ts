@@ -43,3 +43,7 @@ export function addMonths(ym: string, delta: number) {
   const dt = new Date(y, m - 1 + delta, 1);
   return ymKey(dt);
 }
+export function dayOfWeekLocal(iso: string) {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(y, m - 1, d).getDay();
+}
