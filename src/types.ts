@@ -1,4 +1,4 @@
-export type LeaveType = "none" | "annual" | "amHalf" | "pmHalf" | "quarter";
+export type LeaveType = "none" | "annual" | "female" | "amHalf" | "pmHalf" | "quarter";
 
 export type BulkRule = {
   start: string;

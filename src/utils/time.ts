@@ -15,6 +15,7 @@ export const BREAK_PRESETS = [
 
 export const LEAVE_OPTIONS: { key: LeaveType; label: string; hours: number }[] = [
   { key: "annual", label: "연차(8h)", hours: 8 },
+  { key: "female", label: "여성휴가(8h)", hours: 8 },
   { key: "amHalf", label: "오전반차(4h)", hours: 4 },
   { key: "pmHalf", label: "오후반차(4h)", hours: 4 },
   { key: "quarter", label: "반반차(2h)", hours: 2 },
@@ -80,6 +81,8 @@ export function formatWorkRange(entry?: DayEntry | null): string {
     switch (entry.leaveType) {
       case "annual":
         return "연차";
+      case "female":
+        return "여성휴가";
       case "amHalf":
         return "오전반차";
       case "pmHalf":
