@@ -7,7 +7,7 @@ type Mode = "preset" | "manual" | "leave";
 
 export default function EditSheet(props: {
   open: boolean;
-  dateISO: string;
+  date: string;
   isHoliday: boolean;
   holidayName?: string;
   initial?: DayEntry | null;
@@ -42,7 +42,7 @@ export default function EditSheet(props: {
       setBreakEnabled(true);
       setBreakStart("12:00");
       setBreakEnd("13:00");
-      setManualHours(isWeekend(props.dateISO) || props.isHoliday ? 0 : 8);
+      setManualHours(isWeekend(props.date) || props.isHoliday ? 0 : 8);
       setLeaveType("annual");
       setMemo("");
       return;
@@ -60,11 +60,11 @@ export default function EditSheet(props: {
     // preset key best-match (optional)
     const found = SHIFT_PRESETS.find((s) => s.start === (init.start ?? "") && s.end === (init.end ?? ""));
     if (found) setShiftKey(found.key);
-  }, [props.open, props.initial, props.dateISO, props.isHoliday]);
+  }, [props.open, props.initial, props.date, props.isHoliday]);
 
   const previewHours = useMemo(() => {
     const entryBase: Omit<DayEntry, "hours"> = {
-      date: props.dateISO,
+      date: props.date,
       mode,
       start,
       end,
@@ -76,7 +76,7 @@ export default function EditSheet(props: {
       memo,
     };
     return computeHours(entryBase);
-  }, [mode, start, end, breakEnabled, breakStart, breakEnd, manualHours, leaveType, props.dateISO]);
+  }, [mode, start, end, breakEnabled, breakStart, breakEnd, manualHours, leaveType, props.date]);
 
   function applyShift(key: (typeof SHIFT_PRESETS)[number]["key"]) {
     const s = SHIFT_PRESETS.find((x) => x.key === key)!;
@@ -94,7 +94,7 @@ export default function EditSheet(props: {
 
   function save() {
     const base: Omit<DayEntry, "hours"> = {
-      date: props.dateISO,
+      date: props.date,
       mode,
       start,
       end,
@@ -126,7 +126,7 @@ export default function EditSheet(props: {
         <div className="sheetHandle" />
         <div className="sheetHead">
           <div>
-            <div className="sheetDate">{props.dateISO}</div>
+            <div className="sheetDate">{props.date}</div>
             {props.isHoliday && (
               <div className="holidayLabel">공휴일 · {props.holidayName ?? "Holiday"}</div>
             )}

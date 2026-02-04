@@ -575,3 +575,120 @@ button{ cursor: pointer; }
   color: rgba(255, 99, 132, .95);      /* 기존 핑크 톤이면 유지 */
   background: rgba(255, 99, 132, .14); /* 은은한 배경 */
 }
+
+.bulkBar{
+  margin: 12px 0 14px;
+  display:flex;
+  justify-content:center;
+}
+
+.bulkBtn{
+  width: min(520px, 100%);
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.08);
+  color: rgba(255,255,255,.92);
+  font-weight: 900;
+  font-size: 13px;
+  line-height: 1.2;
+}.bulkBar{
+  margin: 12px 0 14px;
+  display:flex;
+  justify-content:center;
+}
+
+.bulkBtn{
+  width: min(520px, 100%);
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.08);
+  color: rgba(255,255,255,.92);
+  font-weight: 900;
+  font-size: 13px;
+  line-height: 1.2;
+}
+.bulkBtn:active{
+  transform: translateY(1px);
+}
+.sheetOverlay{ position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:flex-end; }
+.sheet{ width:100%; border-radius:18px 18px 0 0; padding:16px; background:rgba(20,20,30,.96); }
+.row{ display:flex; align-items:center; gap:8px; }
+.row input{ width:100%; padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.06); color:#fff; }
+.bulkSection{ margin-top:12px; padding-top:12px; border-top:1px solid rgba(255,255,255,.08); }
+.bulkLabel{ font-weight:900; margin-bottom:8px; color:rgba(255,255,255,.92); }
+.chk{ display:flex; align-items:center; gap:10px; margin-top:10px; color:rgba(255,255,255,.86); }
+.row2{ display:flex; gap:10px; margin-top:10px; }
+.pill{ flex:1; padding:10px 12px; border-radius:999px; border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.06); color:#fff; font-weight:900; }
+.pill.on{ background:rgba(255,255,255,.14); }
+.sheetActions{ display:flex; gap:10px; margin-top:14px; }
+.btn{ flex:1; padding:12px 14px; border-radius:14px; font-weight:900; }
+.btn.ghost{ background:rgba(255,255,255,.06); color:#fff; border:1px solid rgba(255,255,255,.12); }
+.btn.primary{ background:rgba(99,102,241,.85); color:#fff; border:1px solid rgba(255,255,255,.10); }
+
+.confirmOverlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  z-index: 999;
+}
+
+.confirmModal{
+  width: min(420px, 100%);
+  border-radius: 18px;
+  padding: 16px 16px 14px;
+  background: rgba(18, 18, 26, .96);
+  border: 1px solid rgba(255,255,255,.10);
+  box-shadow: 0 30px 90px rgba(0,0,0,.40);
+}
+
+.confirmTitle{
+  font-weight: 950;
+  font-size: 15px;
+  letter-spacing: -0.3px;
+  color: rgba(255,255,255,.94);
+  margin-bottom: 10px;
+}
+
+.confirmDesc{
+  font-size: 13px;
+  line-height: 1.45;
+  color: rgba(255,255,255,.82);
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.08);
+}
+
+.confirmActions{
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.cBtn{
+  flex: 1;
+  padding: 12px 12px;
+  border-radius: 14px;
+  font-weight: 900;
+  font-size: 13px;
+  border: 1px solid rgba(255,255,255,.12);
+}
+
+.cBtn.ghost{
+  background: rgba(255,255,255,.06);
+  color: rgba(255,255,255,.92);
+}
+
+.cBtn.primary{
+  background: rgba(99, 102, 241, .85);
+  color: #fff;
+  border-color: rgba(255,255,255,.10);
+}

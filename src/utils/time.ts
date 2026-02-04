@@ -95,3 +95,14 @@ export function formatWorkRange(entry?: DayEntry | null): string {
   if (entry.start && entry.end) return `${entry.start}-${entry.end}`;
   return "";
 }
+function toMin(t: string) {
+  const [h, m] = t.split(":").map(Number);
+  return h * 60 + m;
+}
+
+export function calcHoursFromTimes(start: string, end: string, bStart?: string, bEnd?: string) {
+  if (!start || !end) return 0;
+  let mins = toMin(end) - toMin(start);
+  if (bStart && bEnd) mins -= (toMin(bEnd) - toMin(bStart));
+  return Math.max(0, Math.round((mins / 60) * 100) / 100);
+}

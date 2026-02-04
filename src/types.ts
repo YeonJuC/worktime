@@ -1,13 +1,29 @@
 export type LeaveType = "none" | "annual" | "amHalf" | "pmHalf" | "quarter";
 
+export type BulkRule = {
+  start: string;
+  end: string;
+  breakEnabled: boolean;
+  breakStart: string;
+  breakEnd: string;
+  preset?: string;
+};
+
+export type BulkPlan = {
+  monThu: BulkRule;
+  fri: BulkRule;
+  mode: "onlyEmpty" | "overwrite";
+  skipHolidays: boolean;
+  skipWeekends: boolean;
+};
+
 export type DayEntry = {
+  // ✅ preset 이름(예: "FULL_730", "HALF_AM" 등)
+  preset?: string;
+
   // ISO date: YYYY-MM-DD
   date: string;
 
-  // one of:
-  // - preset (start/end + break)
-  // - manual (manualHours)
-  // - leave (leaveType)
   mode: "preset" | "manual" | "leave";
 
   start?: string; // "07:30"
@@ -20,7 +36,6 @@ export type DayEntry = {
 
   leaveType?: LeaveType;
 
-  // optional memo for the day
   memo?: string;
 
   // computed hours for that day
@@ -28,3 +43,4 @@ export type DayEntry = {
 
   updatedAt?: any;
 };
+

@@ -5,10 +5,13 @@ import CalendarGrid, { type Cell } from "./components/CalendarGrid";
 import EditSheet from "./components/EditSheet";
 import SummaryBar from "./components/SummaryBar";
 import { useHolidays } from "./hooks/useHolidays";
-import { useMonthData } from "./hooks/useMonthData";
+import useMonthData from "./hooks/useMonthData";
 import { addMonths, isWeekend } from "./utils/date";
 import type { DayEntry } from "./types";
-import { formatWorkRange } from "./utils/time";
+import { calcHoursFromTimes, formatWorkRange } from "./utils/time";
+import BulkSheet from "./components/BulkSheet";
+import type { BulkPlan } from "./types";
+import { useBulkPlan } from "./hooks/useBulkPlan";
 
 function nowYM() {
   const d = new Date();
@@ -87,6 +90,64 @@ function Main(props: {
   const editEntry = props.editISO ? byDate[props.editISO] ?? null : null;
   const editHoliday = props.editISO ? holidays[props.editISO] : undefined;
 
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const { plan: bulkPlan, setPlan: setBulkPlan, savePlan, resetPlan } = useBulkPlan(props.uid);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  function applyBulkPlan(plan: BulkPlan) {
+    const [y, m] = props.ym.split("-").map(Number);
+    const dim = new Date(y, m, 0).getDate();
+    const mm = String(m).padStart(2, "0");
+
+    for (let d = 1; d <= dim; d++) {
+      const iso = `${y}-${mm}-${String(d).padStart(2, "0")}`;
+
+      if (plan.skipWeekends && isWeekend(iso)) continue;
+      if (plan.skipHolidays && holidays[iso]) continue;
+
+      const exist = byDate[iso];
+
+      // ✅ onlyEmpty 모드: 이미 뭔가 있으면 보호
+      if (plan.mode === "onlyEmpty" && exist) {
+        const hasWork = (exist.hours ?? 0) > 0;
+        const hasLeave = (exist.leaveType ?? "NONE") !== "NONE";
+        const hasMemo = Boolean((exist.memo ?? "").trim());
+        const hasPreset = Boolean(exist.preset);
+        if (hasWork || hasLeave || hasMemo || hasPreset) continue;
+      }
+
+      const dow = new Date(`${iso}T00:00:00`).getDay(); // 0일~6토
+      if (dow === 0 || dow === 6) continue; // 안전장치(주말)
+
+      const rule = (dow >= 1 && dow <= 4) ? plan.monThu : (dow === 5 ? plan.fri : null);
+      if (!rule) continue;
+
+      const breakEnabled = !!rule.breakEnabled;
+
+      const entry: DayEntry = {
+        date: iso,
+        mode: "preset",
+        preset: rule.preset ?? "CUSTOM",
+        start: rule.start,
+        end: rule.end,
+        breakEnabled,
+        breakStart: breakEnabled ? rule.breakStart : "",
+        breakEnd: breakEnabled ? rule.breakEnd : "",
+        memo: exist?.memo ?? "",
+        hours: calcHoursFromTimes(
+          rule.start,
+          rule.end,
+          breakEnabled ? rule.breakStart : undefined,
+          breakEnabled ? rule.breakEnd : undefined
+        ),
+        updatedAt: Date.now(),
+      };
+      upsert(entry);
+
+    }
+  }
+
+
   function openEdit(iso: string) {
     if (!iso) return;
     props.setEditISO(iso);
@@ -110,6 +171,12 @@ function Main(props: {
         bizDays={bizDays}
         holidays={holidayCount}
       />
+
+      <div className="bulkBar">
+        <button className="bulkBtn" onClick={() => setConfirmOpen(true)}>
+          이번 달 일괄 등록
+        </button>
+      </div>
 
       <CalendarGrid
         ym={props.ym}
@@ -170,12 +237,71 @@ function Main(props: {
 
       <EditSheet
         open={Boolean(props.editISO)}
-        dateISO={props.editISO ?? ""}
+        date={props.editISO ?? ""}
         isHoliday={Boolean(editHoliday)}
         holidayName={editHoliday?.localName}
         initial={editEntry}
         onClose={() => props.setEditISO(null)}
         onSave={saveEntry}
+      />
+
+      {confirmOpen ? (
+        <div className="confirmOverlay" onClick={() => setConfirmOpen(false)}>
+          <div className="confirmModal" onClick={(e) => e.stopPropagation()}>
+            <div className="confirmTitle">이번 달에 일괄 적용할까요?</div>
+
+            <div className="confirmDesc">
+              <div>• 월~목: <b>{bulkPlan.monThu.start}~{bulkPlan.monThu.end}</b></div>
+              <div>• 금요일: <b>{bulkPlan.fri.start}~{bulkPlan.fri.end}</b></div>
+              <div>• 모드: <b>{bulkPlan.mode === "onlyEmpty" ? "빈 날만 채우기" : "덮어쓰기"}</b></div>
+              <div>• 공휴일 제외: <b>{bulkPlan.skipHolidays ? "ON" : "OFF"}</b></div>
+            </div>
+
+            <div className="confirmActions">
+              <button className="cBtn ghost" onClick={() => setConfirmOpen(false)}>
+                취소
+              </button>
+
+              <button
+                className="cBtn primary"
+                onClick={async () => {
+                  // ✅ 저장 + 이번달 적용
+                  await savePlan(bulkPlan);
+
+                  applyBulkPlan(bulkPlan);
+
+                  setConfirmOpen(false);
+                  setBulkOpen(false); // BulkSheet 열려있던 경우 닫기
+                }}
+              >
+                적용하기
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+
+      <BulkSheet
+        open={bulkOpen}
+        plan={bulkPlan}
+        onChange={setBulkPlan}
+        onClose={() => setBulkOpen(false)}
+        onApply={async () => {
+          await savePlan(bulkPlan);      // ✅ 먼저 저장
+
+          applyBulkPlan(bulkPlan);       // ✅ 이번 달에 일괄 적용
+          setBulkOpen(false);
+        }}
+        onSavePreset={async () => {
+          await savePlan(bulkPlan);
+          // ✅ 여기! 저장 버튼 눌렀을 때 반응
+          alert("일괄등록 설정을 저장했어요.");
+        }}
+        onResetPreset={async () => {
+          await resetPlan();
+          alert("설정을 초기화했어요.");
+        }}
       />
     </main>
   );

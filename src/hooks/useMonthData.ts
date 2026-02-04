@@ -3,7 +3,15 @@ import { collection, doc, onSnapshot, setDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import type { DayEntry } from "../types";
 
-export function useMonthData(uid: string | null, ym: string) {
+function stripUndefined<T extends Record<string, any>>(obj: T): T {
+  const out: any = { ...obj };
+  Object.keys(out).forEach((k) => {
+    if (out[k] === undefined) delete out[k];
+  });
+  return out;
+}
+
+export default function useMonthData(uid: string | null, ym: string) {
   const [byDate, setByDate] = useState<Record<string, DayEntry>>({});
   const [loading, setLoading] = useState(true);
 
@@ -18,6 +26,7 @@ export function useMonthData(uid: string | null, ym: string) {
       setLoading(false);
       return;
     }
+
     setLoading(true);
     const unsub = onSnapshot(
       monthCol,
@@ -25,7 +34,7 @@ export function useMonthData(uid: string | null, ym: string) {
         const next: Record<string, DayEntry> = {};
         snap.forEach((d) => {
           const data = d.data() as DayEntry;
-          next[data.date] = data;
+          if (data?.date) next[data.date] = data;
         });
         setByDate(next);
         setLoading(false);
@@ -35,13 +44,14 @@ export function useMonthData(uid: string | null, ym: string) {
         setLoading(false);
       }
     );
+
     return () => unsub();
   }, [monthCol]);
 
   async function upsert(entry: DayEntry) {
     if (!uid) return;
     const ref = doc(db, "users", uid, "months", ym, "days", entry.date);
-    await setDoc(ref, entry, { merge: true });
+    await setDoc(ref, stripUndefined(entry), { merge: true });
   }
 
   return { byDate, loading, upsert };
