@@ -146,8 +146,18 @@ function Main(props: {
                 )}
               </div>
               {memo.trim() && <div className="memoLine" title={memo}>{memo}</div>}
-              {range && <div className="rangeLine" title={range}>{range}</div>}
-              <div className="hours">
+              {range && (() => {
+                const [s, e] = range.split("-");
+                return (
+                  <div className="workRange" title={range} aria-label={range}>
+                    <span className="ws">{s}</span>
+                    <span className="dash">-</span>
+                    <span className="we">{e}</span>
+                  </div>
+                );
+              })()}
+
+              <div className="workHours">
                 <span className={hours === 0 ? "h0" : "h"}>{hours.toFixed(2)}h</span>
               </div>
             </div>

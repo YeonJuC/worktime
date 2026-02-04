@@ -443,3 +443,53 @@ button{ cursor: pointer; }
   .memoLine{ font-size: 10px; }
   .hours{ font-size: 12px; }
 }
+
+/* 셀 내부가 열 너비를 못 늘리게 */
+.cell { min-width: 0; }
+
+/* ✅ 근무구간: 잘림(...) 금지, 줄바꿈 허용 */
+.workRange{
+  min-width: 0;
+  font-weight: 900;
+  font-size: 13px;
+  letter-spacing: -0.3px;
+  line-height: 1.12;
+  color: rgba(255,255,255,.94);
+
+  display: inline-flex;
+  flex-wrap: wrap;          /* ✅ 줄바꿈 */
+  align-items: baseline;
+  gap: 2px;
+
+  /* ellipsis 금지 */
+  white-space: normal;
+  overflow: visible;
+}
+
+.workRange .dash{
+  opacity: .85;
+  margin: 0 1px;
+}
+
+/* 시간(h)은 보조로 더 작게 */
+.workHours{
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: -0.2px;
+  color: rgba(255,255,255,.78);
+}
+
+.calendarGrid{
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+/* 390px 이하 */
+@media (max-width: 390px){
+  .workRange{ font-size: 13px; }
+  .workHours{ font-size: 11px; opacity: .75; }
+}
+
+@media (max-width: 390px){
+  .workHours{ display:none; }
+}
