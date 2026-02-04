@@ -139,12 +139,15 @@ function Main(props: {
             >
               <div className="cellTop">
                 <span className="dayNum">{c.day}</span>
-                {hol && (
-                  <span className="holDot" title={hol.localName}>
-                    ●{isSubHoliday ? <span className="subTag">대체</span> : null}
-                  </span>
-                )}
+                {hol && <span className="holDot" title={hol.localName}>●</span>}
               </div>
+
+              {/* ✅ 대체공휴일 태그는 날짜 밑으로 */}
+              {hol && isSubHoliday ? (
+                <div className="subLine">
+                  <span className="subTag">대체</span>
+                </div>
+              ) : null}
               {memo.trim() && <div className="memoLine" title={memo}>{memo}</div>}
               {range && (() => {
                 const [s, e] = range.split("-");

@@ -494,26 +494,84 @@ button{ cursor: pointer; }
   .workHours{ display:none; }
 }
 
+.cellTop{
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* 날짜 왼쪽, 공휴일표시 오른쪽 */
+  gap: 8px;
+  min-width: 0;
+}
+
+.dayNum{
+  flex: 0 0 auto;
+}
+
+/* 공휴일 표시(● + 대체)를 한 덩어리로, 오른쪽에 딱 붙임 */
+.holDot{
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;                 /* ✅ 점-대체 간격 좁게 */
+  white-space: nowrap;
+}
+
+/* 점 자체도 너무 튀지 않게 */
+.holDot .dot{
+  font-size: 10px;
+  line-height: 1;
+  transform: translateY(-1px);
+}
+
+/* 대체 태그: 너무 크면 밀려나니까 작게 + 타이트 */
 .subTag{
   display: inline-flex;
   align-items: center;
-  white-space: nowrap;     /* ✅ 줄바꿈 금지 */
-  word-break: keep-all;    /* ✅ 한글 분리 금지 */
-  flex: 0 0 auto;          /* ✅ 줄바꿈/늘어남 방지 */
+  white-space: nowrap;
+  word-break: keep-all;
 
-  margin-left: 6px;
-  padding: 1px 6px;
+  padding: 1px 2px;
   border-radius: 999px;
 
   font-size: 10px;
   font-weight: 900;
-  line-height: 1;          /* ✅ 높이 안정화 */
+  line-height: 1;
+
+  /* ✅ 여기 중요: 과한 좌우 마진 제거 */
+  margin-left: 0;
+}
+.cellTop{
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .holDot{
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  white-space: nowrap;     /* ✅ 줄바꿈 금지 */
-  flex: 0 0 auto;
+  font-size: 10px;
+  line-height: 1;
+  opacity: .9;
+}
+
+/* ✅ “대체”가 들어갈 줄 */
+.subLine{
+  margin-top: 6px;
+  display:flex;
+  justify-content: flex-start; /* 날짜 아래 왼쪽 정렬 */
+}
+
+.subTag{
+  display:inline-flex;
+  align-items:center;
+  white-space: nowrap;
+  word-break: keep-all;
+
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1;
+
+  color: rgba(255, 99, 132, .95);      /* 기존 핑크 톤이면 유지 */
+  background: rgba(255, 99, 132, .14); /* 은은한 배경 */
 }
