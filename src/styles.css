@@ -1406,3 +1406,10 @@ header.topBar .btn.ghost{
 .sheet .toggle{
   flex: 0 0 auto;
 }
+@media (max-width: 390px) {
+    .workRange .ws, .workRange .we {
+        display: block;
+        font-size: 10px;
+        letter-spacing: -.2px;
+    }
+}
