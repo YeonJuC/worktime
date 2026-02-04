@@ -1345,3 +1345,64 @@ header.topBar .btn.ghost{
     font-size: 12px;
   }
 }
+/* EditSheet의 시간 입력들만 줄이기 */
+.sheet .row2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;                 /* 간격 */
+  align-items: center;
+}
+
+/* 시간/숫자 input 전용 슬림 */
+.sheet input.input[type="time"],
+.sheet input.input[type="number"]{
+  height: 48px;              /* ✅ 덩치 줄임 */
+  padding: 10px 12px;        /* ✅ padding 줄임 */
+  border-radius: 14px;
+  font-size: 15px;
+}
+
+/* iOS time input 내부 글자/정렬 안정화 */
+.sheet input.input[type="time"]{
+  -webkit-appearance: none;
+  appearance: none;
+}
+@media (max-width: 390px){
+  /* 시작/종료, 점심 시작/끝 → 1열로 */
+  .sheet .row2{
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .sheet input.input[type="time"],
+  .sheet input.input[type="number"]{
+    height: 46px;
+    font-size: 14px;
+    border-radius: 13px;
+  }
+}
+/* 칩 전체 살짝 컴팩트 */
+.sheet .chips{
+  gap: 6px;
+}
+
+.sheet .chip{
+  padding: 7px 10px;      /* ✅ 기존 9px 10px → 줄임 */
+  font-size: 12px;
+}
+
+/* 390px 이하에서 더 슬림 */
+@media (max-width: 390px){
+  .sheet .chip{
+    padding: 6px 9px;
+    font-size: 12px;
+  }
+}
+/* 점심시간 줄(토글 + 칩)만 좀 더 보기 좋게 */
+.sheet .field .row2{
+  align-items: center;
+}
+
+.sheet .toggle{
+  flex: 0 0 auto;
+}
