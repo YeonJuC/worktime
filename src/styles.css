@@ -1845,3 +1845,9 @@ header.topBar .btn.ghost{
     border-radius: 18px 18px 16px 16px;
   }
 }
+.sheet {
+  padding-top: calc(12px + env(safe-area-inset-top, 0px));
+}
+.sheetHead {
+  padding-top: calc(6px + env(safe-area-inset-top, 0px));
+}
