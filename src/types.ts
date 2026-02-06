@@ -1,46 +1,63 @@
-export type LeaveType = "none" | "annual" | "female" | "amHalf" | "pmHalf" | "quarter";
-
-export type BulkRule = {
-  start: string;
-  end: string;
-  breakEnabled: boolean;
-  breakStart: string;
-  breakEnd: string;
-  preset?: string;
-};
-
-export type BulkPlan = {
-  monThu: BulkRule;
-  fri: BulkRule;
-  mode: "onlyEmpty" | "overwrite";
-  skipHolidays: boolean;
-  skipWeekends: boolean;
-};
+export type LeaveType =
+  | "none"
+  | "annual"
+  | "amHalf"
+  | "pmHalf"
+  | "quarter"
+  | "female";
 
 export type DayEntry = {
-  // ✅ preset 이름(예: "FULL_730", "HALF_AM" 등)
-  preset?: string;
-
-  // ISO date: YYYY-MM-DD
   date: string;
 
-  mode: "preset" | "manual" | "leave";
+  // ✅ 근무 방식만 담당 (leave는 분리)
+  mode: "preset" | "manual";
 
-  start?: string; // "07:30"
-  end?: string; // "17:00"
+  // preset 사용 시
+  preset?: string; // "0800-1700" or "CUSTOM" 등
+  start?: string;
+  end?: string;
+
   breakEnabled?: boolean;
-  breakStart?: string; // "12:00"
-  breakEnd?: string; // "13:00"
+  breakStart?: string;
+  breakEnd?: string;
 
-  manualHours?: number; // 0 ~ 24
+  // manual 사용 시
+  manualHours?: number;
 
-  leaveType?: LeaveType;
+  // ✅ 연차/반차/여성휴가를 근무와 동시에 저장
+  leaveType?: LeaveType; // default: "none"
 
   memo?: string;
 
-  // computed hours for that day
+  // ✅ 최종 합산 시간(근무+연차)
   hours: number;
 
-  updatedAt?: any;
+  updatedAt?: number;
 };
 
+export type BulkRule = {
+  preset?: string;
+  start: string;
+  end: string;
+  breakEnabled?: boolean;
+  breakStart?: string;
+  breakEnd?: string;
+};
+
+export type BulkPlan = {
+  mode: "overwrite" | "onlyEmpty";
+  skipWeekends: boolean;
+  skipHolidays: boolean;
+  monThu: BulkRule;
+  fri: BulkRule;
+};
+
+// src/types.ts
+
+export type LeaveSettings = {
+  /** 총 연차 개수 (예: 15, 15.5) */
+  annualTotal: number;
+
+  /** 연차 사용 가능 만료월 (YYYY-MM, 예: 2026-06) */
+  annualValidUntilYM?: string;
+};

@@ -1413,3 +1413,352 @@ header.topBar .btn.ghost{
         letter-spacing: -.2px;
     }
 }
+
+/* 연차/여성휴가 박스 컴팩트 */
+.compactBox{
+  padding: 12px 12px;
+}
+
+.compactBox .summaryRow{
+  padding: 6px 2px;          /* 기존보다 얇게 */
+}
+
+.leaveInline{
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: 52px 1fr 1.2fr 64px; /* 라벨 / 숫자 / 만료월 / 저장 */
+  gap: 8px;
+  align-items: center;
+}
+
+.leaveLabel{
+  font-size: 12px;
+  color: rgba(255,255,255,.70);
+  font-weight: 800;
+}
+
+.leaveInput,
+.leaveMonth{
+  width: 100%;
+  height: 38px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.08);
+  outline: none;
+}
+
+.leaveSaveBtn{
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(99, 102, 241, .85);
+  font-weight: 900;
+}
+
+/* 390px 이하: 더 빡세게 압축 */
+@media (max-width: 390px){
+  .leaveInline{
+    grid-template-columns: 44px 1fr 1fr 56px;
+    gap: 6px;
+  }
+  .leaveInput,
+  .leaveMonth,
+  .leaveSaveBtn{
+    height: 34px;
+    border-radius: 11px;
+    padding: 7px 9px;
+    font-size: 12px;
+  }
+  .leaveLabel{
+    font-size: 11px;
+  }
+}
+/* =========================
+   Leave summary (연차 박스) - 겹침 해결
+   ========================= */
+
+/* summary 박스에 compactBox를 붙여서 사용 */
+.summary.compactBox {
+  position: relative;
+  padding: 14px 14px 12px;
+  border-radius: 18px;
+}
+
+/* 상단 "연차 잔여" 칩 + 설정(…) 버튼 영역 */
+.leaveHead {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+/* 좌측 칩 */
+.leaveChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.16);
+  background: rgba(255,255,255,.08);
+  font-weight: 900;
+  font-size: 12px;
+  color: rgba(255,255,255,.90);
+}
+
+/* 우측 … 버튼 (absolute 금지) */
+.leaveMoreBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 34px;
+  height: 34px;
+
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.06);
+
+  line-height: 1;
+  font-weight: 900;
+  font-size: 18px;
+  padding: 0;
+}
+
+.leaveMoreBtn:active {
+  transform: scale(.98);
+}
+
+/* summaryRow를 조금 더 컴팩트하게 */
+.summary.compactBox .summaryRow {
+  padding: 10px 4px;
+}
+
+/* 오른쪽 값이 길어져도 줄바꿈/겹침 방지 */
+.summary.compactBox .summaryRow .v {
+  min-width: 0;
+}
+
+.summary.compactBox .summaryRow .v b {
+  display: block;
+  white-space: nowrap;
+}
+
+.summary.compactBox .summaryRow .v .tiny {
+  display: block;
+  margin-top: 4px;
+  white-space: nowrap;
+  opacity: .9;
+}
+
+/* =========================
+   <= 448px
+   ========================= */
+@media (max-width: 448px) {
+  .summary.compactBox {
+    padding: 12px 12px 10px;
+    border-radius: 16px;
+  }
+
+  .leaveMoreBtn {
+    width: 32px;
+    height: 32px;
+    border-radius: 12px;
+  }
+
+  .summary.compactBox .summaryRow .v b {
+    font-size: 18px;
+  }
+}
+
+/* =========================
+   <= 390px (아이폰 SE급)
+   ========================= */
+@media (max-width: 390px) {
+  .summary.compactBox {
+    padding: 10px 10px 10px;
+    border-radius: 16px;
+  }
+
+  .leaveHead {
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .leaveChip {
+    font-size: 11px;
+    padding: 5px 9px;
+  }
+
+  .leaveMoreBtn {
+    width: 30px;
+    height: 30px;
+    border-radius: 10px;
+    font-size: 17px;
+  }
+
+  .summary.compactBox .summaryRow {
+    padding: 9px 2px;
+  }
+
+  .summary.compactBox .summaryRow .k {
+    font-size: 12px;
+  }
+
+  .summary.compactBox .summaryRow .v b {
+    font-size: 17px;
+  }
+
+  .summary.compactBox .summaryRow .v .tiny {
+    font-size: 11px;
+  }
+}
+/* ✅ 연차 요약 박스 컴팩트 */
+.compactLeaveBox{
+  padding: 12px 12px;
+}
+.compactLeaveBox .summaryRow{
+  padding: 6px 2px;
+}
+.leaveActions{
+  display:flex;
+  justify-content:flex-end;
+  margin-top: 6px;
+}
+.leaveMiniBtn{
+  padding: 6px 10px;
+  height: 32px;
+  font-size: 12px;
+  line-height: 1;
+}
+
+/* ✅ 캘린더 셀: leave 태그 */
+.leaveLine{ margin-top: 6px; display:flex; }
+.leaveTag{
+  font-size: 11px;
+  font-weight: 900;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(78,161,255,.28);
+  background: rgba(78,161,255,.12);
+  color: rgba(255,255,255,.92);
+}
+
+@media (max-width: 390px){
+  .compactLeaveBox{ padding: 10px 10px; }
+  .leaveMiniBtn{ padding: 5px 9px; height: 30px; font-size: 12px; }
+  .leaveTag{ font-size: 10px; padding: 2px 6px; }
+}
+/* ✅ grid row가 내용 때문에 늘어나지 않게 "고정 높이"로 */
+.grid{
+  display:grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-auto-rows: 92px;           /* 핵심: 고정 */
+  gap: 0;                         /* 너가 gap 쓰면 유지해도 됨 */
+}
+
+/* ✅ 셀은 높이를 100%로 쓰고, 내용은 넘치면 숨김 */
+.cell{
+  height: 100%;
+  min-height: 0;                  /* 중요 */
+  overflow: hidden;               /* 내용 많아도 칸 늘어나지 않게 */
+  display:flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* ✅ 연차/반차/여성휴가 뱃지(칩) 한 줄로 */
+.leavePill{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  white-space: nowrap;            /* 한 줄 고정 */
+  max-width: 100%;
+  overflow:hidden;
+  text-overflow: ellipsis;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+/* 390px 이하에서 더 타이트 */
+@media (max-width: 390px){
+  .grid{ grid-auto-rows: 84px; }
+  .leavePill{ font-size: 11px; padding: 3px 6px; }
+}
+/* ✅ 셀 높이 들쑥날쑥 방지: 내용이 많아도 동일 높이 느낌 */
+.cell{
+  min-height: 74px;              /* 이미 쓰는 값 유지/조정 */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;   /* 아래로 밀어내지 않게 */
+  gap: 6px;
+}
+
+/* ✅ 휴가 태그는 "한 줄"로만 */
+.leaveLine{
+  display: flex;
+  justify-content: flex-start;
+  min-height: 18px;              /* ✅ 태그 있든 없든 공간 일정 */
+}
+
+/* ✅ 휴가 pill 기본 */
+.leavePill{
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  height: 18px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: -0.2px;
+  white-space: nowrap;           /* ✅ 한 줄 고정 */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.06);
+  color: rgba(255,255,255,.92);
+}
+
+/* ✅ 연차/반차/여성휴가별 색깔(표시 확실히) */
+.leavePill.lv-annual{
+  border-color: rgba(255, 210, 77, .55);
+  background: rgba(255, 210, 77, .14);
+  color: rgba(255, 220, 120, .98);
+}
+
+.leavePill.lv-amHalf,
+.leavePill.lv-pmHalf{
+  border-color: rgba(78, 161, 255, .55);
+  background: rgba(78, 161, 255, .16);
+  color: rgba(200, 230, 255, .98);
+}
+
+.leavePill.lv-quarter{
+  border-color: rgba(168, 85, 247, .55);
+  background: rgba(168, 85, 247, .16);
+  color: rgba(235, 210, 255, .98);
+}
+
+.leavePill.lv-female{
+  border-color: rgba(255, 77, 109, .55);
+  background: rgba(255, 77, 109, .14);
+  color: rgba(255, 190, 205, .98);
+}
+
+/* ✅ 390px 이하에서도 한 줄로 안정 */
+@media (max-width: 390px){
+  .leavePill{
+    height: 17px;
+    font-size: 10px;
+    padding: 0 7px;
+  }
+  .leaveLine{
+    min-height: 17px;
+  }
+}
