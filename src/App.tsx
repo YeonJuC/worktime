@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import AuthGate from "./components/AuthGate";
 import MonthHeader from "./components/MonthHeader";
 import CalendarGrid, { type Cell } from "./components/CalendarGrid";
@@ -29,6 +29,19 @@ export default function App() {
     const [y, m] = ym.split("-");
     return `${y}년 ${Number(m)}월`;
   }, [ym]);
+
+  useEffect(() => {
+    const setVh = () => {
+      document.documentElement.style.setProperty(
+        "--vh",
+        `${window.innerHeight * 0.01}px`
+      );
+    };
+    setVh();
+    window.addEventListener("resize", setVh);
+    return () => window.removeEventListener("resize", setVh);
+  }, []);
+  
 
   return (
     <AuthGate>

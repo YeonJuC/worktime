@@ -1766,68 +1766,82 @@ header.topBar .btn.ghost{
     min-height: 17px;
   }
 }
-/* overlay는 하단 정렬 + safe-area */
-.sheetOverlay{
+/* overlay는 하단 정렬 + safe-area (top도 고려) */
+.sheetOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,.45);
+  background: rgba(0, 0, 0, 0.45);
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  padding: 10px 10px calc(10px + env(safe-area-inset-bottom, 0px));
+
+  /* ✅ 상단/하단 safe-area 모두 고려 */
+  padding:
+    calc(10px + env(safe-area-inset-top, 0px))
+    10px
+    calc(10px + env(safe-area-inset-bottom, 0px))
+    10px;
+
   z-index: 50;
 }
 
 /* ✅ sheet: 최대높이 제한 + 내부 레이아웃(헤더/푸터 고정) */
-.sheet{
+.sheet {
   width: min(520px, 100%);
-  max-height: calc(100vh - 16px - env(safe-area-inset-bottom, 0px));
+  max-height: calc((var(--vh, 1vh) * 100)
+    - 20px
+    - env(safe-area-inset-top, 0px)
+    - env(safe-area-inset-bottom, 0px)
+  );
+
   display: flex;
   flex-direction: column;
-  overflow: hidden;              /* 내부 스크롤로 넘김 */
+  overflow: hidden;
+  border-radius: 20px 20px 16px 16px;
+
+  /* ✅ iOS에서 주소창/툴바 변화에도 안정적으로 */
+  transform: translateZ(0);
 }
 
 /* ✅ 헤더/푸터는 고정 */
-.sheetHead{ flex: 0 0 auto; }
-.sheetFoot{
+.sheetHead {
+  flex: 0 0 auto;
+}
+
+.sheetFoot {
   flex: 0 0 auto;
   position: sticky;
   bottom: 0;
-  background: linear-gradient(180deg, rgba(10,16,30,0), rgba(10,16,30,.92) 35%);
+  z-index: 2;
+
+  background: linear-gradient(
+    180deg,
+    rgba(10, 16, 30, 0),
+    rgba(10, 16, 30, 0.92) 35%
+  );
+
   padding-top: 10px;
   padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
 }
 
 /* ✅ 본문만 스크롤 */
-.sheetScroll{
+.sheetScroll {
   flex: 1 1 auto;
   overflow: auto;
   -webkit-overflow-scrolling: touch;
-  padding-right: 2px; /* 스크롤바 생겨도 레이아웃 덜 흔들림 */
+  padding-right: 2px;
 }
 
 /* 390px에서는 더 타이트하게 */
-@media (max-width: 390px){
-  .sheetOverlay{ padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px)); }
-  .sheet{ border-radius: 18px 18px 16px 16px; }
-}
-.sheet{
-  width: min(520px, 100%);
-  max-height: calc(100vh - 16px - env(safe-area-inset-bottom, 0px));
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.sheetScroll{
-  flex: 1 1 auto;
-  overflow: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-.sheetFoot{
-  position: sticky;
-  bottom: 0;
-  z-index: 1;
-  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+@media (max-width: 390px) {
+  .sheetOverlay {
+    padding:
+      calc(8px + env(safe-area-inset-top, 0px))
+      8px
+      calc(8px + env(safe-area-inset-bottom, 0px))
+      8px;
+  }
+  .sheet {
+    border-radius: 18px 18px 16px 16px;
+  }
 }
