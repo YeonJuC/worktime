@@ -37,10 +37,9 @@ export default function App() {
     };
 
     setVh();
-
     window.addEventListener("resize", setVh);
     window.visualViewport?.addEventListener("resize", setVh);
-    window.visualViewport?.addEventListener("scroll", setVh); // 주소창 접힘/펼침 대응
+    window.visualViewport?.addEventListener("scroll", setVh);
 
     return () => {
       window.removeEventListener("resize", setVh);

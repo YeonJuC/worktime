@@ -1912,3 +1912,24 @@ header.topBar .btn.ghost{
     rgba(10,16,30,.92) 35%
   );
 }
+.sheetScroll,
+.confirmDesc{
+  touch-action: pan-y;
+}
+input[type="time"],
+input[type="month"],
+input[type="number"]{
+  -webkit-appearance: none;
+  appearance: none;
+}
+input[type="month"]{
+  font-size: 16px; /* iOS 확대 방지(기본 16px 룰) */
+}
+/* 삭제 추천 */
+.sheet { padding-top: calc(12px + env(safe-area-inset-top, 0px)); }
+
+/* 유지(또는 이 정도로) */
+.sheetHead { padding-top: env(safe-area-inset-top, 0px); }
+.topBar{ z-index: 20; }
+.sheetOverlay{ z-index: 100; }
+.confirmOverlay{ z-index: 200; }
