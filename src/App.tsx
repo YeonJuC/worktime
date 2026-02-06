@@ -151,6 +151,17 @@ function Main(props: {
   // ✅ 연차 설정 팝업(총 연차/유효기간 입력)
   const [leaveModalOpen, setLeaveModalOpen] = useState(false);
 
+   useEffect(() => {
+    const open = leaveModalOpen || confirmOpen || bulkOpen || Boolean(props.editISO);
+    if (!open) return;
+
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [leaveModalOpen, confirmOpen, bulkOpen, props.editISO]);
+
   async function applyBulkPlan(plan: BulkPlan) {
     const [y, m] = props.ym.split("-").map(Number);
     const dim = new Date(y, m, 0).getDate();
