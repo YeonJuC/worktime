@@ -296,14 +296,6 @@ export default function EditSheet(props: {
           <div className="field">
             <div className="label">연차/반차</div>
             <div className="chips">
-              {/* ✅ 없음 버튼 추가(기본값) */}
-              <button
-                className={leaveType === "none" ? "chip on" : "chip"}
-                onClick={() => setLeaveType("none")}
-              >
-                없음
-              </button>
-
               {LEAVE_OPTIONS.map((o) => {
                 if (o.key === "female") {
                   return (
