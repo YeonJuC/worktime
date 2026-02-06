@@ -1851,3 +1851,64 @@ header.topBar .btn.ghost{
 .sheetHead {
   padding-top: calc(6px + env(safe-area-inset-top, 0px));
 }
+/* ✅ 모달 오버레이: safe-area 포함 */
+.confirmOverlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  z-index: 60;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding:
+    calc(12px + env(safe-area-inset-top, 0px))
+    12px
+    calc(12px + env(safe-area-inset-bottom, 0px))
+    12px;
+
+  /* iOS 스크롤 튐 방지 */
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ✅ 모달 박스: 화면 높이(주소창 포함) 기준으로 max-height */
+.confirmModal{
+  width: min(520px, 100%);
+  max-height: calc(
+    (var(--vh, 1vh) * 100)
+    - 24px
+    - env(safe-area-inset-top, 0px)
+    - env(safe-area-inset-bottom, 0px)
+  );
+
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  border-radius: 18px;
+}
+
+/* ✅ 내용은 스크롤 가능(키보드/픽커 떠도 버튼 유지) */
+.confirmDesc{
+  flex: 1 1 auto;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 12px;
+}
+
+/* ✅ 하단 버튼은 항상 보이게 sticky */
+.confirmActions{
+  flex: 0 0 auto;
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(
+    180deg,
+    rgba(10,16,30,0),
+    rgba(10,16,30,.92) 35%
+  );
+}
