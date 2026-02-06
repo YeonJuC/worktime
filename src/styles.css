@@ -1787,8 +1787,8 @@ header.topBar .btn.ghost{
 
 /* ✅ sheet: 최대높이 제한 + 내부 레이아웃(헤더/푸터 고정) */
 .sheet {
-  width: min(520px, 100%);
-  max-height: calc((var(--vh, 1vh) * 100)
+  max-height: calc(
+    (var(--vh, 1vh) * 100)
     - 20px
     - env(safe-area-inset-top, 0px)
     - env(safe-area-inset-bottom, 0px)
