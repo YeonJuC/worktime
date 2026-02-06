@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import type { DayEntry, LeaveType } from "../types";
-import { BREAK_PRESETS, SHIFT_PRESETS, computeHours, LEAVE_OPTIONS } from "../utils/time";
+import {
+  BREAK_PRESETS,
+  SHIFT_PRESETS,
+  computeHours,
+  LEAVE_OPTIONS,
+} from "../utils/time";
 
 type Mode = "preset" | "manual";
 
@@ -77,7 +82,7 @@ export default function EditSheet(props: {
       breakStart,
       breakEnd,
       manualHours,
-      leaveType, // ✅ 항상 함께 전달
+      leaveType,
       memo,
     };
     return computeHours(base);
@@ -115,7 +120,6 @@ export default function EditSheet(props: {
     leaveType !== "female" && (props.femaleUsedThisMonth ?? 0) >= 1;
 
   function save() {
-    // ✅ leave는 mode와 무관하게 그대로 저장(없으면 none)
     const normalizedLeaveType: LeaveType = leaveType ?? "none";
 
     const base: Omit<DayEntry, "hours"> = {
@@ -178,169 +182,179 @@ export default function EditSheet(props: {
           </button>
         </div>
 
-        {mode === "preset" && (
-          <div className="sheetBody">
-            <div className="field">
-              <div className="label">근무시간 옵션</div>
-              <div className="tiny muted" style={{ marginTop: 6 }}>
-                * 옵션 선택 후 아래에서 시간을 직접 수정할 수 있어요.
-              </div>
-              <div className="chips">
-                {SHIFT_PRESETS.map((s) => (
-                  <button
-                    key={s.key}
-                    className={shiftKey === s.key ? "chip on" : "chip"}
-                    onClick={() => applyShift(s.key)}
-                  >
-                    {s.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="row2">
+        {/* ✅ 여기부터는 스크롤 영역 */}
+        <div className="sheetScroll">
+          {mode === "preset" && (
+            <div className="sheetBody">
               <div className="field">
-                <div className="label">시작</div>
-                <input
-                  className="input"
-                  type="time"
-                  value={start}
-                  onChange={(e) => setStart(e.target.value)}
-                />
-              </div>
-              <div className="field">
-                <div className="label">종료</div>
-                <input
-                  className="input"
-                  type="time"
-                  value={end}
-                  onChange={(e) => setEnd(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="field">
-              <div className="label">점심시간</div>
-              <div className="row2">
-                <label className="toggle">
-                  <input
-                    type="checkbox"
-                    checked={breakEnabled}
-                    onChange={(e) => setBreakEnabled(e.target.checked)}
-                  />
-                  <span>사용</span>
-                </label>
+                <div className="label">근무시간 옵션</div>
+                <div className="tiny muted" style={{ marginTop: 6 }}>
+                  * 옵션 선택 후 아래에서 시간을 직접 수정할 수 있어요.
+                </div>
                 <div className="chips">
-                  {BREAK_PRESETS.map((b) => (
+                  {SHIFT_PRESETS.map((s) => (
                     <button
-                      key={b.key}
-                      className={
-                        breakStart === b.start && breakEnd === b.end
-                          ? "chip on"
-                          : "chip"
-                      }
-                      onClick={() => {
-                        setBreakEnabled(true);
-                        setBreakStart(b.start);
-                        setBreakEnd(b.end);
-                      }}
+                      key={s.key}
+                      className={shiftKey === s.key ? "chip on" : "chip"}
+                      onClick={() => applyShift(s.key)}
                     >
-                      {b.label}
+                      {s.label}
                     </button>
                   ))}
                 </div>
               </div>
 
-              {breakEnabled && (
-                <div className="row2" style={{ marginTop: 8 }}>
+              <div className="row2">
+                <div className="field">
+                  <div className="label">시작</div>
                   <input
                     className="input"
                     type="time"
-                    value={breakStart}
-                    onChange={(e) => setBreakStart(e.target.value)}
-                  />
-                  <input
-                    className="input"
-                    type="time"
-                    value={breakEnd}
-                    onChange={(e) => setBreakEnd(e.target.value)}
+                    value={start}
+                    onChange={(e) => setStart(e.target.value)}
                   />
                 </div>
-              )}
-            </div>
-          </div>
-        )}
+                <div className="field">
+                  <div className="label">종료</div>
+                  <input
+                    className="input"
+                    type="time"
+                    value={end}
+                    onChange={(e) => setEnd(e.target.value)}
+                  />
+                </div>
+              </div>
 
-        {mode === "manual" && (
-          <div className="sheetBody">
-            <div className="field">
-              <div className="label">총 근무시간(시간)</div>
-              <input
-                className="input"
-                type="number"
-                min={0}
-                max={24}
-                step={0.25}
-                value={manualHours}
-                onChange={(e) => setManualHours(Number(e.target.value))}
-              />
-              <div className="tiny muted" style={{ marginTop: 8 }}>
-                예: 8 / 7.5 / 4 / 2 …
+              <div className="field">
+                <div className="label">점심시간</div>
+                <div className="row2">
+                  <label className="toggle">
+                    <input
+                      type="checkbox"
+                      checked={breakEnabled}
+                      onChange={(e) => setBreakEnabled(e.target.checked)}
+                    />
+                    <span>사용</span>
+                  </label>
+                  <div className="chips">
+                    {BREAK_PRESETS.map((b) => (
+                      <button
+                        key={b.key}
+                        className={
+                          breakStart === b.start && breakEnd === b.end
+                            ? "chip on"
+                            : "chip"
+                        }
+                        onClick={() => {
+                          setBreakEnabled(true);
+                          setBreakStart(b.start);
+                          setBreakEnd(b.end);
+                        }}
+                      >
+                        {b.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {breakEnabled && (
+                  <div className="row2" style={{ marginTop: 8 }}>
+                    <input
+                      className="input"
+                      type="time"
+                      value={breakStart}
+                      onChange={(e) => setBreakStart(e.target.value)}
+                    />
+                    <input
+                      className="input"
+                      type="time"
+                      value={breakEnd}
+                      onChange={(e) => setBreakEnd(e.target.value)}
+                    />
+                  </div>
+                )}
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* ✅ 연차/반차: 근무와 동시에 선택 */}
-        <div className="sheetBody" style={{ paddingTop: 0 }}>
-          <div className="field">
-            <div className="label">연차/반차</div>
-            <div className="chips">
-              {LEAVE_OPTIONS.map((o) => {
-                if (o.key === "female") {
+          {mode === "manual" && (
+            <div className="sheetBody">
+              <div className="field">
+                <div className="label">총 근무시간(시간)</div>
+                <input
+                  className="input"
+                  type="number"
+                  min={0}
+                  max={24}
+                  step={0.25}
+                  value={manualHours}
+                  onChange={(e) => setManualHours(Number(e.target.value))}
+                />
+                <div className="tiny muted" style={{ marginTop: 8 }}>
+                  예: 8 / 7.5 / 4 / 2 …
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ✅ 연차/반차: 근무와 동시에 선택 */}
+          <div className="sheetBody" style={{ paddingTop: 0 }}>
+            <div className="field">
+              <div className="label">연차/반차</div>
+              <div className="chips">
+                {LEAVE_OPTIONS.map((o) => {
+                  if (o.key === "female") {
+                    return (
+                      <button
+                        key={o.key}
+                        className={leaveType === o.key ? "chip on" : "chip"}
+                        disabled={femaleBlocked}
+                        onClick={() => setLeaveType(o.key)}
+                        title={
+                          femaleBlocked
+                            ? "이번 달 여성휴가는 이미 사용했어요."
+                            : o.label
+                        }
+                      >
+                        {o.label}
+                      </button>
+                    );
+                  }
                   return (
                     <button
                       key={o.key}
                       className={leaveType === o.key ? "chip on" : "chip"}
-                      disabled={femaleBlocked}
                       onClick={() => setLeaveType(o.key)}
-                      title={femaleBlocked ? "이번 달 여성휴가는 이미 사용했어요." : o.label}
                     >
                       {o.label}
                     </button>
                   );
-                }
-                return (
-                  <button
-                    key={o.key}
-                    className={leaveType === o.key ? "chip on" : "chip"}
-                    onClick={() => setLeaveType(o.key)}
-                  >
-                    {o.label}
-                  </button>
-                );
-              })}
-            </div>
-
-            {femaleBlocked && (
-              <div className="tiny muted" style={{ marginTop: 8 }}>
-                * 여성휴가는 매달 1회만 사용 가능해요.
+                })}
               </div>
-            )}
-          </div>
-        </div>
 
-        <div className="sheetBody" style={{ paddingTop: 0 }}>
-          <div className="field">
-            <div className="label">메모</div>
-            <textarea
-              className="input memoInput"
-              rows={3}
-              placeholder="이 날짜에 메모 남기기…"
-              value={memo}
-              onChange={(e) => setMemo(e.target.value)}
-            />
+              {femaleBlocked && (
+                <div className="tiny muted" style={{ marginTop: 8 }}>
+                  * 여성휴가는 매달 1회만 사용 가능해요.
+                </div>
+              )}
+            </div>
           </div>
+
+          <div className="sheetBody" style={{ paddingTop: 0 }}>
+            <div className="field">
+              <div className="label">메모</div>
+              <textarea
+                className="input memoInput"
+                rows={3}
+                placeholder="이 날짜에 메모 남기기…"
+                value={memo}
+                onChange={(e) => setMemo(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* 스크롤 마지막 여유(키보드/하단 sticky 겹침 방지) */}
+          <div style={{ height: 8 }} />
         </div>
 
         <div className="sheetFoot">

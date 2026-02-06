@@ -1697,6 +1697,10 @@ header.topBar .btn.ghost{
   flex-direction: column;
   justify-content: flex-start;   /* 아래로 밀어내지 않게 */
   gap: 6px;
+  border-right-width: 1px;
+  border-bottom-width: 1px;
+  margin-right: 0.5px;
+  margin-bottom: 0.5px;
 }
 
 /* ✅ 휴가 태그는 "한 줄"로만 */
@@ -1761,4 +1765,69 @@ header.topBar .btn.ghost{
   .leaveLine{
     min-height: 17px;
   }
+}
+/* overlay는 하단 정렬 + safe-area */
+.sheetOverlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 10px 10px calc(10px + env(safe-area-inset-bottom, 0px));
+  z-index: 50;
+}
+
+/* ✅ sheet: 최대높이 제한 + 내부 레이아웃(헤더/푸터 고정) */
+.sheet{
+  width: min(520px, 100%);
+  max-height: calc(100vh - 16px - env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;              /* 내부 스크롤로 넘김 */
+}
+
+/* ✅ 헤더/푸터는 고정 */
+.sheetHead{ flex: 0 0 auto; }
+.sheetFoot{
+  flex: 0 0 auto;
+  position: sticky;
+  bottom: 0;
+  background: linear-gradient(180deg, rgba(10,16,30,0), rgba(10,16,30,.92) 35%);
+  padding-top: 10px;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+}
+
+/* ✅ 본문만 스크롤 */
+.sheetScroll{
+  flex: 1 1 auto;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-right: 2px; /* 스크롤바 생겨도 레이아웃 덜 흔들림 */
+}
+
+/* 390px에서는 더 타이트하게 */
+@media (max-width: 390px){
+  .sheetOverlay{ padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px)); }
+  .sheet{ border-radius: 18px 18px 16px 16px; }
+}
+.sheet{
+  width: min(520px, 100%);
+  max-height: calc(100vh - 16px - env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sheetScroll{
+  flex: 1 1 auto;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.sheetFoot{
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
 }
