@@ -284,7 +284,8 @@ function Main(props: {
     const hours = entry?.hours ?? 0;
     const memo = entry?.memo ?? "";
     const range = formatWorkRange(entry ?? null);
-    const isSubHoliday = !!hol?.substitute;
+    const isHoliday = !!hol; // 공휴일 + 수동휴일 포함
+    const showWorkTime = !isHoliday;
     const isToday = c.iso === todayISO;
     const leaveType = byDate[c.iso]?.leaveType ?? "none";
     const leaveText = leaveLabel(leaveType);
@@ -350,6 +351,12 @@ function Main(props: {
             <span className={["leavePill", `lv-${leaveType}`].join(" ")}>
               {leaveText}
             </span>
+          </div>
+        )}
+
+        {hol?.substitute && (
+          <div className="subLine">
+            <span className="subTag">대체</span>
           </div>
         )}
 
