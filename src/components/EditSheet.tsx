@@ -16,7 +16,13 @@ export default function EditSheet(props: {
   holidayName?: string;
   initial?: DayEntry | null;
   onClose: () => void;
-  onSave: (entry: DayEntry) => void;
+  onSave: (
+    entry: DayEntry,
+    manualHoliday: { enabled: boolean; name: string }
+  ) => void | Promise<void>;
+
+  manualHolidayEnabled?: boolean;
+  manualHolidayName?: string;
 
   // ✅ 이번 달 여성휴가 사용 횟수(월1회 제한)
   femaleUsedThisMonth?: number;
@@ -36,6 +42,9 @@ export default function EditSheet(props: {
   const [leaveType, setLeaveType] = useState<LeaveType>("none");
 
   const [memo, setMemo] = useState("");
+  const [manualHolidayEnabled, setManualHolidayEnabled] = useState(false);
+  const [manualHolidayName, setManualHolidayName] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!props.open) return;
@@ -53,6 +62,8 @@ export default function EditSheet(props: {
       setLeaveType("none");
       setManualHours(8);
       setMemo("");
+      setManualHolidayEnabled(props.manualHolidayEnabled ?? false);
+      setManualHolidayName(props.manualHolidayName ?? "");
       return;
     }
 
@@ -65,12 +76,14 @@ export default function EditSheet(props: {
     setManualHours(init.manualHours ?? 8);
     setLeaveType(init.leaveType ?? "none");
     setMemo(init.memo ?? "");
+    setManualHolidayEnabled(props.manualHolidayEnabled ?? false);
+    setManualHolidayName(props.manualHolidayName ?? "");
 
     const found = SHIFT_PRESETS.find(
       (s) => s.start === (init.start ?? "") && s.end === (init.end ?? "")
     );
     if (found) setShiftKey(found.key);
-  }, [props.open, props.initial]);
+  }, [props.open, props.initial, props.manualHolidayEnabled, props.manualHolidayName]);
 
   const previewHours = useMemo(() => {
     const base: Omit<DayEntry, "hours"> = {
@@ -119,7 +132,7 @@ export default function EditSheet(props: {
   const femaleBlocked =
     leaveType !== "female" && (props.femaleUsedThisMonth ?? 0) >= 1;
 
-  function save() {
+  async function save() {
     const normalizedLeaveType: LeaveType = leaveType ?? "none";
 
     const base: Omit<DayEntry, "hours"> = {
@@ -136,8 +149,16 @@ export default function EditSheet(props: {
     };
 
     const hours = computeHours(base);
-    props.onSave({ ...base, hours });
-    props.onClose();
+    try {
+      setSaving(true);
+      await props.onSave(
+        { ...base, hours },
+        { enabled: manualHolidayEnabled, name: manualHolidayName.trim() || "수동 휴일" }
+      );
+      props.onClose();
+    } finally {
+      setSaving(false);
+    }
   }
 
   if (!props.open) return null;
@@ -157,7 +178,7 @@ export default function EditSheet(props: {
             <div className="sheetDate">{props.date}</div>
             {props.isHoliday && (
               <div className="holidayLabel">
-                공휴일 · {props.holidayName ?? "Holiday"}
+                휴일 · {props.holidayName ?? "Holiday"}
               </div>
             )}
           </div>
@@ -342,6 +363,36 @@ export default function EditSheet(props: {
 
           <div className="sheetBody" style={{ paddingTop: 0 }}>
             <div className="field">
+              <div className="label">수동 휴일</div>
+              <label className="toggle manualHolidayToggle">
+                <input
+                  type="checkbox"
+                  checked={manualHolidayEnabled}
+                  onChange={(e) => setManualHolidayEnabled(e.target.checked)}
+                />
+                <span>이 날짜를 휴일로 지정</span>
+              </label>
+
+              {manualHolidayEnabled && (
+                <div style={{ marginTop: 10 }}>
+                  <input
+                    className="input"
+                    type="text"
+                    maxLength={30}
+                    placeholder="예: 회사창립기념일"
+                    value={manualHolidayName}
+                    onChange={(e) => setManualHolidayName(e.target.value)}
+                  />
+                  <div className="tiny muted" style={{ marginTop: 8 }}>
+                    공휴일 목록에 없는 회사 휴무일도 직접 표시할 수 있어요.
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="sheetBody" style={{ paddingTop: 0 }}>
+            <div className="field">
               <div className="label">메모</div>
               <textarea
                 className="input memoInput"
@@ -362,8 +413,8 @@ export default function EditSheet(props: {
             <span className="muted">계산됨</span>
             <b>{previewHours.toFixed(2)}h</b>
           </div>
-          <button className="btn primary" onClick={save}>
-            저장
+          <button className="btn primary" onClick={save} disabled={saving}>
+            {saving ? "저장 중..." : "저장"}
           </button>
         </div>
       </div>
