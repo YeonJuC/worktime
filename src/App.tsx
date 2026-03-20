@@ -5,6 +5,7 @@ import CalendarGrid, { type Cell } from "./components/CalendarGrid";
 import EditSheet from "./components/EditSheet";
 import SummaryBar from "./components/SummaryBar";
 import { useHolidays } from "./hooks/useHolidays";
+import { useManualHolidays } from "./hooks/useManualHolidays";
 import useMonthData from "./hooks/useMonthData";
 import { addMonths, isWeekend, dayOfWeekLocal } from "./utils/date";
 import type { DayEntry, BulkPlan } from "./types";
@@ -73,6 +74,8 @@ function Main(props: {
   setEditISO: (v: string | null) => void;
 }) {
   const { holidays } = useHolidays(props.ym, "KR");
+  const { manualHolidays, upsertManualHoliday, removeManualHoliday } = useManualHolidays(props.uid, props.ym);
+  const mergedHolidays = useMemo(() => ({ ...holidays, ...manualHolidays }), [holidays, manualHolidays]);
   const { byDate, upsert } = useMonthData(props.uid, props.ym);
 
   const { settings: leaveSettings, setSettings: setLeaveSettings, saveSettings } =
@@ -123,7 +126,7 @@ function Main(props: {
     for (let d = 1; d <= dim; d++) {
       const iso = `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
       const weekend = isWeekend(iso);
-      const isHol = Boolean(holidays[iso]);
+      const isHol = Boolean(mergedHolidays[iso]);
 
       if (!weekend) {
         if (!isHol) biz += 1;
@@ -139,10 +142,10 @@ function Main(props: {
       bizDays: biz,
       holidayCount: hol,
     };
-  }, [props.ym, holidays, byDate]);
+  }, [props.ym, mergedHolidays, byDate]);
 
   const editEntry = props.editISO ? byDate[props.editISO] ?? null : null;
-  const editHoliday = props.editISO ? holidays[props.editISO] : undefined;
+  const editHoliday = props.editISO ? mergedHolidays[props.editISO] : undefined;
 
   const [bulkOpen, setBulkOpen] = useState(false);
   const { plan: bulkPlan, setPlan: setBulkPlan, savePlan, resetPlan } = useBulkPlan(props.uid);
@@ -173,7 +176,7 @@ function Main(props: {
       const iso = `${y}-${mm}-${String(d).padStart(2, "0")}`;
 
       if (plan.skipWeekends && isWeekend(iso)) continue;
-      if (plan.skipHolidays && holidays[iso]) continue;
+      if (plan.skipHolidays && mergedHolidays[iso]) continue;
 
       const exist = byDate[iso];
 
@@ -219,9 +222,6 @@ function Main(props: {
     props.setEditISO(iso);
   }
 
-  function saveEntry(entry: DayEntry) {
-    upsert({ ...entry, updatedAt: Date.now() });
-  }
 
   return (
     <main className="page">
@@ -278,7 +278,7 @@ function Main(props: {
           if (!c.inMonth) return <div key={idx} className="cell empty" />;
 
           const weekend = isWeekend(c.iso);
-          const hol = holidays[c.iso];
+          const hol = mergedHolidays[c.iso];
           const entry = byDate[c.iso];
           const hours = entry?.hours ?? 0;
           const memo = entry?.memo ?? "";
@@ -355,9 +355,24 @@ function Main(props: {
         date={props.editISO ?? ""}
         isHoliday={Boolean(editHoliday)}
         holidayName={editHoliday?.localName}
+        manualHolidayEnabled={Boolean(props.editISO && manualHolidays[props.editISO])}
+        manualHolidayName={props.editISO ? manualHolidays[props.editISO]?.localName ?? "" : ""}
         initial={editEntry}
         onClose={() => props.setEditISO(null)}
-        onSave={saveEntry}
+        onSave={async (entry, manualHoliday) => {
+          upsert({ ...entry, updatedAt: Date.now() });
+
+          if (!props.editISO) return;
+
+          if (manualHoliday.enabled) {
+            await upsertManualHoliday({
+              date: props.editISO,
+              localName: manualHoliday.name,
+            });
+          } else {
+            await removeManualHoliday(props.editISO);
+          }
+        }}
         femaleUsedThisMonth={femaleUsedThisMonth}
       />
 
