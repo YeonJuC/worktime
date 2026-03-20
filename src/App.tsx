@@ -273,82 +273,97 @@ function Main(props: {
       </div>
 
       <CalendarGrid
-        ym={props.ym}
-        renderCell={(c: Cell, idx: number) => {
-          if (!c.inMonth) return <div key={idx} className="cell empty" />;
+  ym={props.ym}
+  renderCell={(c: Cell, idx: number) => {
+    if (!c.inMonth) return <div key={idx} className="cell empty" />;
 
-          const weekend = isWeekend(c.iso);
-          const hol = mergedHolidays[c.iso];
-          const entry = byDate[c.iso];
-          const hours = entry?.hours ?? 0;
-          const memo = entry?.memo ?? "";
-          const range = formatWorkRange(entry ?? null);
-          const isSubHoliday = !!hol?.substitute;
-          const isToday = c.iso === todayISO;
-          const leaveType = byDate[c.iso]?.leaveType ?? "none";
-          const leaveText = leaveLabel(leaveType);
+    const weekend = isWeekend(c.iso);
+    const hol = mergedHolidays[c.iso];
+    const manualHol = manualHolidays[c.iso];
+    const entry = byDate[c.iso];
+    const hours = entry?.hours ?? 0;
+    const memo = entry?.memo ?? "";
+    const range = formatWorkRange(entry ?? null);
+    const isSubHoliday = !!hol?.substitute;
+    const isToday = c.iso === todayISO;
+    const leaveType = byDate[c.iso]?.leaveType ?? "none";
+    const leaveText = leaveLabel(leaveType);
 
-          return (
-            <div
-              key={c.iso}
-              className={[
-                "cell",
-                weekend ? "weekend" : "",
-                hol ? "holiday" : "",
-                isToday ? "today" : "",
-              ].join(" ")}
-              onClick={() => openEdit(c.iso)}
-              role="button"
-              tabIndex={0}
-            >
-              <div className="cellTop">
-                <span className="dayNum">{c.day}</span>
-                {hol && (
-                  <span className="holDot" title={hol.localName}>
-                    ●
-                  </span>
-                )}
+    const showWorkTime = !isSubHoliday;
+    const manualHolidayText = manualHol?.localName?.trim() ?? "";
+
+    return (
+      <div
+        key={c.iso}
+        className={[
+          "cell",
+          weekend ? "weekend" : "",
+          hol ? "holiday" : "",
+          isToday ? "today" : "",
+        ].join(" ")}
+        onClick={() => openEdit(c.iso)}
+        role="button"
+        tabIndex={0}
+      >
+        <div className="cellTop">
+          <span className="dayNum">{c.day}</span>
+          {hol && (
+            <span className="holDot" title={hol.localName}>
+              ●
+            </span>
+          )}
+        </div>
+
+        {hol && isSubHoliday ? (
+          <div className="subLine">
+            <span className="subTag">대체</span>
+          </div>
+        ) : null}
+
+        {manualHolidayText && (
+          <div className="manualHolidayLine" title={manualHolidayText}>
+            {manualHolidayText}
+          </div>
+        )}
+
+        {memo.trim() && (
+          <div className="memoLine" title={memo}>
+            {memo}
+          </div>
+        )}
+
+        {showWorkTime &&
+          range &&
+          (() => {
+            const [s, e] = range.split("-");
+            return (
+              <div className="workRange" title={range} aria-label={range}>
+                <span className="ws">{s}</span>
+                <span className="dash">-</span>
+                <span className="we">{e}</span>
               </div>
+            );
+          })()}
 
-              {hol && isSubHoliday ? (
-                <div className="subLine">
-                  <span className="subTag">대체</span>
-                </div>
-              ) : null}
+        {leaveType !== "none" && (
+          <div className="leaveLine">
+            <span className={["leavePill", `lv-${leaveType}`].join(" ")}>
+              {leaveText}
+            </span>
+          </div>
+        )}
 
-              {memo.trim() && (
-                <div className="memoLine" title={memo}>
-                  {memo}
-                </div>
-              )}
-
-              {range &&
-                (() => {
-                  const [s, e] = range.split("-");
-                  return (
-                    <div className="workRange" title={range} aria-label={range}>
-                      <span className="ws">{s}</span>
-                      <span className="dash">-</span>
-                      <span className="we">{e}</span>
-                    </div>
-                  );
-                })()}
-
-                {leaveType !== "none" && (
-                <div className="leaveLine">
-                  <span className={["leavePill", `lv-${leaveType}`].join(" ")}>
-                    {leaveText}
-                  </span>
-                </div>
-              )}
-
-              <div className="workHours">
-                <span className={hours === 0 ? "h0" : "h"}>{hours.toFixed(2)}h</span>
-              </div>
-            </div>
-          ); 
-        }}
-      />
+        {showWorkTime && (
+          <div className="workHours">
+            <span className={hours === 0 ? "h0" : "h"}>
+              {hours.toFixed(2)}h
+            </span>
+          </div>
+        )}
+      </div>
+    );
+  }}
+/>
 
       <EditSheet
         open={Boolean(props.editISO)}
