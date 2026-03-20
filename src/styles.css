@@ -1971,7 +1971,35 @@ input[type="month"]{
   .sheetFoot{ gap: 8px; padding-top: 8px; }
   .sumPill{ padding: 9px 10px; font-size: 12px; }
 }
+.manualHolidayLine{
+  margin-top: 6px;
+  font-size: 11px;
+  line-height: 1.2;
+  color: rgba(255,255,255,.9);
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
+.subLine{
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+}
+
+.subTag{
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #ffd6de;
+  background: rgba(255, 77, 109, .16);
+  border: 1px solid rgba(255, 77, 109, .35);
+}
 @media (max-width: 393px){
   .cell{ min-height: 78px; padding-inline: 4px; }
   .workRange{ font-size: 10px; }
