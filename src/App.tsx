@@ -74,7 +74,10 @@ function Main(props: {
   setEditISO: (v: string | null) => void;
 }) {
   const { holidays } = useHolidays(props.ym, "KR");
-  const { manualHolidays, upsertManualHoliday, removeManualHoliday } = useManualHolidays(props.uid, props.ym);
+  const { manualHolidays, upsertManualHoliday, removeManualHoliday } = useManualHolidays(
+    props.uid,
+    props.ym
+  );
   const mergedHolidays = useMemo(() => ({ ...holidays, ...manualHolidays }), [holidays, manualHolidays]);
   const { byDate, upsert } = useMonthData(props.uid, props.ym);
 
@@ -89,23 +92,21 @@ function Main(props: {
     return `${y}-${m}-${day}`;
   }, []);
 
-  // ✅ 유효기간(YYYY-MM) 기준으로 “누적 차감” 집계 범위를 잡음
   const ymLE = (a: string, b: string) => a <= b;
 
-  const validUntilYM = (leaveSettings.annualValidUntilYM ?? "").trim(); // 예: "2026-06"
+  const validUntilYM = (leaveSettings.annualValidUntilYM ?? "").trim();
   const expired = validUntilYM ? !ymLE(props.ym, validUntilYM) : false;
 
-  // 집계 시작월: 유효기간의 연도 1월(원하면 settings로 startYM 따로 둬도 됨)
   const periodStartYM = validUntilYM
     ? `${validUntilYM.slice(0, 4)}-01`
     : `${props.ym.slice(0, 4)}-01`;
 
-  // 화면이 유효기간을 넘으면 유효기간 월까지만 집계
   const cutYM = validUntilYM
-    ? (ymLE(props.ym, validUntilYM) ? props.ym : validUntilYM)
+    ? ymLE(props.ym, validUntilYM)
+      ? props.ym
+      : validUntilYM
     : props.ym;
 
-  // ✅ 누적 연차 차감/여성휴가 월별 카운트
   const { annualUsed, femaleUsedByYM } = useLeaveUsage(props.uid, periodStartYM, cutYM);
 
   const femaleUsedThisMonth = femaleUsedByYM[props.ym] ?? 0;
@@ -150,11 +151,9 @@ function Main(props: {
   const [bulkOpen, setBulkOpen] = useState(false);
   const { plan: bulkPlan, setPlan: setBulkPlan, savePlan, resetPlan } = useBulkPlan(props.uid);
   const [confirmOpen, setConfirmOpen] = useState(false);
-
-  // ✅ 연차 설정 팝업(총 연차/유효기간 입력)
   const [leaveModalOpen, setLeaveModalOpen] = useState(false);
 
-   useEffect(() => {
+  useEffect(() => {
     const open = leaveModalOpen || confirmOpen || bulkOpen || Boolean(props.editISO);
     if (!open) return;
 
@@ -202,10 +201,9 @@ function Main(props: {
         start: rule.start,
         end: rule.end,
         breakEnabled,
-        breakStart: breakEnabled ? (bs || "12:00") : "",
-        breakEnd: breakEnabled ? (be || "13:00") : "",
+        breakStart: breakEnabled ? bs || "12:00" : "",
+        breakEnd: breakEnabled ? be || "13:00" : "",
         memo: exist?.memo ?? "",
-        // ✅ leaveType은 기존 유지 (일괄등록이 근무만 채우는 컨셉)
         leaveType: exist?.leaveType ?? "none",
         updatedAt: Date.now(),
       };
@@ -222,7 +220,6 @@ function Main(props: {
     props.setEditISO(iso);
   }
 
-
   return (
     <main className="page">
       <MonthHeader
@@ -238,7 +235,6 @@ function Main(props: {
         holidays={holidayCount}
       />
 
-      {/* ✅ 연차/여성휴가 요약: 컴팩트 박스(입력은 팝업으로 분리) */}
       <div className="summary glass compactLeaveBox">
         <div className="summaryRow">
           <div className="k">연차 잔여</div>
@@ -273,104 +269,97 @@ function Main(props: {
       </div>
 
       <CalendarGrid
-  ym={props.ym}
-  renderCell={(c: Cell, idx: number) => {
-    if (!c.inMonth) return <div key={idx} className="cell empty" />;
+        ym={props.ym}
+        renderCell={(c: Cell, idx: number) => {
+          if (!c.inMonth) return <div key={idx} className="cell empty" />;
 
-    const weekend = isWeekend(c.iso);
-    const hol = mergedHolidays[c.iso];
-    const manualHol = manualHolidays[c.iso];
-    const entry = byDate[c.iso];
-    const hours = entry?.hours ?? 0;
-    const memo = entry?.memo ?? "";
-    const range = formatWorkRange(entry ?? null);
-    const isHoliday = !!hol; // 공휴일 + 수동휴일 포함
-    const showWorkTime = !isHoliday;
-    const isToday = c.iso === todayISO;
-    const leaveType = byDate[c.iso]?.leaveType ?? "none";
-    const leaveText = leaveLabel(leaveType);
+          const weekend = isWeekend(c.iso);
+          const hol = mergedHolidays[c.iso];
+          const manualHol = manualHolidays[c.iso];
+          const entry = byDate[c.iso];
+          const hours = entry?.hours ?? 0;
+          const memo = entry?.memo ?? "";
+          const range = formatWorkRange(entry ?? null);
+          const isHoliday = !!hol;
+          const isSubHoliday = !!hol?.substitute;
+          const isToday = c.iso === todayISO;
+          const leaveType = byDate[c.iso]?.leaveType ?? "none";
+          const leaveText = leaveLabel(leaveType);
+          const showWorkTime = !isHoliday;
+          const manualHolidayText = manualHol?.localName?.trim() ?? "";
 
-    const showWorkTime = !isSubHoliday;
-    const manualHolidayText = manualHol?.localName?.trim() ?? "";
-
-    return (
-      <div
-        key={c.iso}
-        className={[
-          "cell",
-          weekend ? "weekend" : "",
-          hol ? "holiday" : "",
-          isToday ? "today" : "",
-        ].join(" ")}
-        onClick={() => openEdit(c.iso)}
-        role="button"
-        tabIndex={0}
-      >
-        <div className="cellTop">
-          <span className="dayNum">{c.day}</span>
-          {hol && (
-            <span className="holDot" title={hol.localName}>
-              ●
-            </span>
-          )}
-        </div>
-
-        {hol && isSubHoliday ? (
-          <div className="subLine">
-            <span className="subTag">대체</span>
-          </div>
-        ) : null}
-
-        {manualHolidayText && (
-          <div className="manualHolidayLine" title={manualHolidayText}>
-            {manualHolidayText}
-          </div>
-        )}
-
-        {memo.trim() && (
-          <div className="memoLine" title={memo}>
-            {memo}
-          </div>
-        )}
-
-        {showWorkTime &&
-          range &&
-          (() => {
-            const [s, e] = range.split("-");
-            return (
-              <div className="workRange" title={range} aria-label={range}>
-                <span className="ws">{s}</span>
-                <span className="dash">-</span>
-                <span className="we">{e}</span>
+          return (
+            <div
+              key={c.iso}
+              className={[
+                "cell",
+                weekend ? "weekend" : "",
+                hol ? "holiday" : "",
+                isToday ? "today" : "",
+              ].join(" ")}
+              onClick={() => openEdit(c.iso)}
+              role="button"
+              tabIndex={0}
+            >
+              <div className="cellTop">
+                <span className="dayNum">{c.day}</span>
+                {hol && (
+                  <span className="holDot" title={hol.localName}>
+                    ●
+                  </span>
+                )}
               </div>
-            );
-          })()}
 
-        {leaveType !== "none" && (
-          <div className="leaveLine">
-            <span className={["leavePill", `lv-${leaveType}`].join(" ")}>
-              {leaveText}
-            </span>
-          </div>
-        )}
+              {isSubHoliday ? (
+                <div className="subLine">
+                  <span className="subTag">대체</span>
+                </div>
+              ) : null}
 
-        {hol?.substitute && (
-          <div className="subLine">
-            <span className="subTag">대체</span>
-          </div>
-        )}
+              {manualHolidayText && (
+                <div className="manualHolidayLine" title={manualHolidayText}>
+                  {manualHolidayText}
+                </div>
+              )}
 
-        {showWorkTime && (
-          <div className="workHours">
-            <span className={hours === 0 ? "h0" : "h"}>
-              {hours.toFixed(2)}h
-            </span>
-          </div>
-        )}
-      </div>
-    );
-  }}
-/>
+              {memo.trim() && (
+                <div className="memoLine" title={memo}>
+                  {memo}
+                </div>
+              )}
+
+              {showWorkTime &&
+                range &&
+                (() => {
+                  const [s, e] = range.split("-");
+                  return (
+                    <div className="workRange" title={range} aria-label={range}>
+                      <span className="ws">{s}</span>
+                      <span className="dash">-</span>
+                      <span className="we">{e}</span>
+                    </div>
+                  );
+                })()}
+
+              {leaveType !== "none" && (
+                <div className="leaveLine">
+                  <span className={["leavePill", `lv-${leaveType}`].join(" ")}>
+                    {leaveText}
+                  </span>
+                </div>
+              )}
+
+              {showWorkTime && (
+                <div className="workHours">
+                  <span className={hours === 0 ? "h0" : "h"}>
+                    {hours.toFixed(2)}h
+                  </span>
+                </div>
+              )}
+            </div>
+          );
+        }}
+      />
 
       <EditSheet
         open={Boolean(props.editISO)}
@@ -398,7 +387,6 @@ function Main(props: {
         femaleUsedThisMonth={femaleUsedThisMonth}
       />
 
-      {/* ✅ 연차 설정 팝업 */}
       {leaveModalOpen ? (
         <div className="confirmOverlay" onClick={() => setLeaveModalOpen(false)}>
           <div className="confirmModal" onClick={(e) => e.stopPropagation()}>
@@ -415,7 +403,9 @@ function Main(props: {
                   min={0}
                   step={0.25}
                   value={leaveSettings.annualTotal ?? 0}
-                  onChange={(e) => setLeaveSettings({ ...leaveSettings, annualTotal: Number(e.target.value) })}
+                  onChange={(e) =>
+                    setLeaveSettings({ ...leaveSettings, annualTotal: Number(e.target.value) })
+                  }
                 />
               </div>
 
@@ -427,7 +417,9 @@ function Main(props: {
                   className="input"
                   type="month"
                   value={leaveSettings.annualValidUntilYM ?? ""}
-                  onChange={(e) => setLeaveSettings({ ...leaveSettings, annualValidUntilYM: e.target.value })}
+                  onChange={(e) =>
+                    setLeaveSettings({ ...leaveSettings, annualValidUntilYM: e.target.value })
+                  }
                 />
               </div>
             </div>
@@ -450,7 +442,6 @@ function Main(props: {
         </div>
       ) : null}
 
-      {/* 일괄등록 확인 */}
       {confirmOpen ? (
         <div className="confirmOverlay" onClick={() => setConfirmOpen(false)}>
           <div className="confirmModal" onClick={(e) => e.stopPropagation()}>
