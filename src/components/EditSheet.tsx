@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
+import { useShiftPresets } from "../hooks/useShiftPresets";
 import type { DayEntry, LeaveType } from "../types";
 import {
   BREAK_PRESETS,
-  SHIFT_PRESETS,
   computeHours,
   LEAVE_OPTIONS,
 } from "../utils/time";
@@ -28,8 +28,9 @@ export default function EditSheet(props: {
   femaleUsedThisMonth?: number;
 }) {
   const [mode, setMode] = useState<Mode>("preset");
-  const [shiftKey, setShiftKey] =
-    useState<(typeof SHIFT_PRESETS)[number]["key"]>("0800-1700");
+  const [shiftKey, setShiftKey] = useState<string>("0800-1700");
+  const [managePresets, setManagePresets] = useState(false);
+  const { all: shiftPresets, visible: visibleShiftPresets, add: addShiftPreset, remove: removeShiftPreset, hide: hideShiftPreset, restore: restoreShiftPresets } = useShiftPresets();
 
   const [start, setStart] = useState("08:00");
   const [end, setEnd] = useState("17:00");
@@ -79,11 +80,11 @@ export default function EditSheet(props: {
     setManualHolidayEnabled(props.manualHolidayEnabled ?? false);
     setManualHolidayName(props.manualHolidayName ?? "");
 
-    const found = SHIFT_PRESETS.find(
+    const found = shiftPresets.find(
       (s) => s.start === (init.start ?? "") && s.end === (init.end ?? "")
     );
     if (found) setShiftKey(found.key);
-  }, [props.open, props.initial, props.manualHolidayEnabled, props.manualHolidayName]);
+  }, [props.open, props.initial]);
 
   const previewHours = useMemo(() => {
     const base: Omit<DayEntry, "hours"> = {
@@ -112,8 +113,9 @@ export default function EditSheet(props: {
     memo,
   ]);
 
-  function applyShift(key: (typeof SHIFT_PRESETS)[number]["key"]) {
-    const s = SHIFT_PRESETS.find((x) => x.key === key)!;
+  function applyShift(key: string) {
+    const s = shiftPresets.find((x) => x.key === key);
+    if (!s) return;
     setShiftKey(key);
     setMode("preset");
     setStart(s.start);
@@ -213,15 +215,37 @@ export default function EditSheet(props: {
                   * 옵션 선택 후 아래에서 시간을 직접 수정할 수 있어요.
                 </div>
                 <div className="chips">
-                  {SHIFT_PRESETS.map((s) => (
-                    <button
-                      key={s.key}
-                      className={shiftKey === s.key ? "chip on" : "chip"}
-                      onClick={() => applyShift(s.key)}
-                    >
-                      {s.label}
-                    </button>
+                  {visibleShiftPresets.map((s) => (
+                    <span key={s.key} className="presetChipWrap">
+                      <button
+                        className={shiftKey === s.key ? "chip on" : "chip"}
+                        onClick={() => applyShift(s.key)}
+                      >
+                        {s.label}
+                      </button>
+                      {managePresets && (
+                        <button
+                          className="presetRemoveBtn"
+                          aria-label={`${s.label} 옵션 숨기기`}
+                          onClick={() => s.custom ? removeShiftPreset(s.key) : hideShiftPreset(s.key)}
+                        >×</button>
+                      )}
+                    </span>
                   ))}
+                </div>
+                <div className="presetActions">
+                  <button
+                    className="btn ghost smallBtn"
+                    onClick={() => {
+                      const label = `${start}–${end}`;
+                      const key = addShiftPreset({ label, start, end, breakDefault: breakEnabled, breakStart, breakEnd });
+                      setShiftKey(key);
+                    }}
+                  >현재 시간 빠른 옵션으로 추가</button>
+                  <button className="btn ghost smallBtn" onClick={() => setManagePresets((v) => !v)}>
+                    {managePresets ? "옵션 편집 완료" : "옵션 숨기기/삭제"}
+                  </button>
+                  {managePresets && <button className="btn ghost smallBtn" onClick={restoreShiftPresets}>기본 옵션 복원</button>}
                 </div>
               </div>
 

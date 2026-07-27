@@ -19,6 +19,8 @@ export const SHIFT_PRESETS = [
     breakStart: "12:00",
     breakEnd: "13:00",
   },
+  { key: "0730-1800", label: "07:30–18:00", start: "07:30", end: "18:00", breakDefault: true, breakStart: "12:00", breakEnd: "13:00" },
+  { key: "0730-1500", label: "07:30–15:00", start: "07:30", end: "15:00", breakDefault: true, breakStart: "12:00", breakEnd: "13:00" },
   { key: "0800-1200", label: "08:00–12:00", start: "08:00", end: "12:00", breakDefault: false },
   // ✅ 예외: 07:30–12:30 점심 11:30–12:00 (0.5h)
   { key: "0730-1230", label: "07:30–12:30", start: "07:30", end: "12:30", breakDefault: true, breakStart: "11:30", breakEnd: "12:00" },

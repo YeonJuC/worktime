@@ -74,11 +74,6 @@ function Main(props: {
   setEditISO: (v: string | null) => void;
 }) {
   const { holidays } = useHolidays(props.ym, "KR");
-  const { manualHolidays, upsertManualHoliday, removeManualHoliday } = useManualHolidays(
-    props.uid,
-    props.ym
-  );
-  const mergedHolidays = useMemo(() => ({ ...holidays, ...manualHolidays }), [holidays, manualHolidays]);
   const { byDate, upsert } = useMonthData(props.uid, props.ym);
 
   const { settings: leaveSettings, setSettings: setLeaveSettings, saveSettings } =
@@ -92,6 +87,7 @@ function Main(props: {
     return `${y}-${m}-${day}`;
   }, []);
 
+  // ✅ 유효기간(YYYY-MM) 기준으로 “누적 차감” 집계 범위를 잡음
   const ymLE = (a: string, b: string) => a <= b;
 
   const validUntilYM = (leaveSettings.annualValidUntilYM ?? "").trim();
@@ -222,6 +218,19 @@ function Main(props: {
 
   return (
     <main className="page">
+      {todayNoticeOpen && todayEntry?.start && todayEntry?.end ? (
+        <div className="todayNotice" role="status">
+          <div className="todayNoticeText">
+            <div className="todayNoticeTitle">오늘 근무시간</div>
+            <div className="todayNoticeRange">{todayEntry.start}부터 {todayEntry.end}까지입니다.</div>
+          </div>
+          {"Notification" in window && Notification.permission !== "granted" ? (
+            <button className="notifyEnable" onClick={enableNotifications}>알림 허용</button>
+          ) : null}
+          <button className="noticeClose" onClick={() => setTodayNoticeOpen(false)}>닫기</button>
+        </div>
+      ) : null}
+
       <MonthHeader
         ymLabel={props.ymLabel}
         onPrev={() => props.setYM(addMonths(props.ym, -1))}
