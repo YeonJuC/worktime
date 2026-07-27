@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { doc, setDoc } from "firebase/firestore";
-import { getToken } from "firebase/messaging";
-import { db, messagingPromise } from "./firebase";
+import { db } from "./firebase";
 import AuthGate from "./components/AuthGate";
 import MonthHeader from "./components/MonthHeader";
 import CalendarGrid, { type Cell } from "./components/CalendarGrid";
@@ -79,6 +78,14 @@ function Main(props: {
   const { byDate, upsert } = useMonthData(props.uid, props.ym);
   const [todayNotice, setTodayNotice] = useState<{ start: string; end: string } | null>(null);
   const [notificationSettingsOpen, setNotificationSettingsOpen] = useState(false);
+  const dailyHoursStorageKey = `worktime-daily-hours-visible-${props.uid}`;
+  const [showDailyHours, setShowDailyHours] = useState(() => {
+    try {
+      return localStorage.getItem(dailyHoursStorageKey) !== "hidden";
+    } catch {
+      return true;
+    }
+  });
   const notificationStorageKey = `worktime-notification-settings-${props.uid}`;
   const [notificationEnabled, setNotificationEnabled] = useState(() => {
     try {
@@ -126,6 +133,10 @@ function Main(props: {
       JSON.stringify({ enabled: notificationEnabled, time: notificationTime })
     );
   }, [notificationEnabled, notificationTime, notificationStorageKey]);
+
+  useEffect(() => {
+    localStorage.setItem(dailyHoursStorageKey, showDailyHours ? "visible" : "hidden");
+  }, [dailyHoursStorageKey, showDailyHours]);
 
   useEffect(() => {
     if (!notificationEnabled) return;
@@ -183,42 +194,22 @@ function Main(props: {
       return;
     }
 
-    if (!("Notification" in window) || !("serviceWorker" in navigator)) {
-      alert("이 브라우저는 백그라운드 시스템 알림을 지원하지 않습니다.");
+    if (!("Notification" in window)) {
+      alert("이 브라우저는 시스템 알림을 지원하지 않습니다.");
       return;
     }
 
     let permission = Notification.permission;
     if (permission !== "granted") permission = await Notification.requestPermission();
     if (permission !== "granted") {
-      alert("아이폰 설정에서 알림을 허용해주세요. Safari에서 홈 화면에 추가한 뒤 실행해야 합니다.");
+      alert("브라우저 또는 아이폰 설정에서 알림을 허용해주세요.");
       return;
     }
 
-    try {
-      const registration = await navigator.serviceWorker.register(`${import.meta.env.BASE_URL}firebase-messaging-sw.js`);
-      const messaging = await messagingPromise;
-      if (!messaging) throw new Error("messaging-not-supported");
-
-      const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY as string;
-      if (!vapidKey) throw new Error("missing-vapid-key");
-
-      const token = await getToken(messaging, { vapidKey, serviceWorkerRegistration: registration });
-      if (!token) throw new Error("missing-token");
-
-      await setDoc(doc(db, "users", props.uid, "settings", "notification"), {
-        enabled: true,
-        time: notificationTime,
-        timezone: "Asia/Seoul",
-        token,
-        updatedAt: new Date().toISOString(),
-      }, { merge: true });
-      setNotificationEnabled(true);
-    } catch (error) {
-      console.error("[background notification setup]", error);
-      alert("백그라운드 알림 설정에 실패했습니다. 홈 화면에 추가했는지와 Firebase VAPID 키 설정을 확인해주세요.");
-    }
+    await saveNotificationSettings(true);
+    setNotificationEnabled(true);
   }
+
 
   // ✅ 유효기간(YYYY-MM) 기준으로 “누적 차감” 집계 범위를 잡음
   const ymLE = (a: string, b: string) => a <= b;
@@ -406,6 +397,23 @@ function Main(props: {
         </button>
       </div>
 
+      <div className="calendarViewBar glass">
+        <div>
+          <div className="calendarViewTitle">일일 근무시간 표시</div>
+          <div className="calendarViewDesc">
+            {showDailyHours ? "9.50h 같은 하루 합계 표시 중" : "하루 합계 숨김 · 셀 글씨 확대"}
+          </div>
+        </div>
+        <button
+          type="button"
+          className="btn ghost calendarViewBtn"
+          onClick={() => setShowDailyHours((visible) => !visible)}
+          aria-pressed={!showDailyHours}
+        >
+          {showDailyHours ? "숨기기" : "보이기"}
+        </button>
+      </div>
+
       <div className="notificationBar glass">
         <div>
           <div className="notificationBarTitle">근무시간 알림</div>
@@ -418,6 +426,7 @@ function Main(props: {
         </button>
       </div>
 
+      <div className={showDailyHours ? "calendarDisplay" : "calendarDisplay dailyHoursHidden"}>
       <CalendarGrid
         ym={props.ym}
         renderCell={(c: Cell, idx: number) => {
@@ -488,13 +497,16 @@ function Main(props: {
                 </div>
               )}
 
-              <div className="workHours">
-                <span className={hours === 0 ? "h0" : "h"}>{hours.toFixed(2)}h</span>
-              </div>
+              {showDailyHours ? (
+                <div className="workHours">
+                  <span className={hours === 0 ? "h0" : "h"}>{hours.toFixed(2)}h</span>
+                </div>
+              ) : null}
             </div>
           ); 
         }}
       />
+      </div>
 
       {todayNotice ? (
         <div className="todayNoticeOverlay" onClick={() => setTodayNotice(null)}>
@@ -522,7 +534,7 @@ function Main(props: {
             <div className="notificationSettingRow">
               <div>
                 <div className="notificationSettingLabel">시스템 알림</div>
-                <div className="notificationSettingHint">앱을 열지 않아도 설정한 시간에 하루 한 번 표시</div>
+                <div className="notificationSettingHint">앱이 실행 중일 때 설정한 시간 이후 하루 한 번 표시</div>
               </div>
               <button
                 type="button"
@@ -543,7 +555,7 @@ function Main(props: {
               />
             </label>
             <div className="notificationIosNote">
-              아이폰에서는 Safari 공유 메뉴의 ‘홈 화면에 추가’로 설치한 뒤 알림을 허용해야 앱을 닫아도 알림이 표시됩니다.
+              무료 GitHub Pages 버전에서는 앱이 실행 중이거나 다시 열렸을 때 알림을 확인합니다.
             </div>
             <div className="confirmActions">
               <button className="cBtn primary" onClick={async () => {

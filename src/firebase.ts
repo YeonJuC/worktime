@@ -1,7 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
-import { getMessaging, isSupported } from "firebase/messaging";
 
 /**
  * ✅ Firebase 콘솔 > 프로젝트 설정 > 일반 > 내 앱(SDK 설정 및 구성)에서 값 복사해서 넣어줘.
@@ -21,4 +20,3 @@ const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
-export const messagingPromise = isSupported().then((supported) => supported ? getMessaging(app) : null);
