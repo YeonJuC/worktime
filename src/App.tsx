@@ -5,7 +5,6 @@ import CalendarGrid, { type Cell } from "./components/CalendarGrid";
 import EditSheet from "./components/EditSheet";
 import SummaryBar from "./components/SummaryBar";
 import { useHolidays } from "./hooks/useHolidays";
-import { useManualHolidays } from "./hooks/useManualHolidays";
 import useMonthData from "./hooks/useMonthData";
 import { addMonths, isWeekend, dayOfWeekLocal } from "./utils/date";
 import type { DayEntry, BulkPlan } from "./types";
@@ -75,6 +74,7 @@ function Main(props: {
 }) {
   const { holidays } = useHolidays(props.ym, "KR");
   const { byDate, upsert } = useMonthData(props.uid, props.ym);
+  const [todayNotice, setTodayNotice] = useState<{ start: string; end: string } | null>(null);
 
   const { settings: leaveSettings, setSettings: setLeaveSettings, saveSettings } =
     useLeaveSettings(props.uid);
@@ -87,22 +87,70 @@ function Main(props: {
     return `${y}-${m}-${day}`;
   }, []);
 
+  useEffect(() => {
+    const entry = byDate[todayISO];
+    if (!entry?.start || !entry?.end || (entry.hours ?? 0) <= 0) return;
+
+    const sessionKey = `worktime-today-popup-${props.uid}-${todayISO}`;
+    if (!sessionStorage.getItem(sessionKey)) {
+      setTodayNotice({ start: entry.start, end: entry.end });
+      sessionStorage.setItem(sessionKey, "shown");
+    }
+
+    if (!("Notification" in window) || Notification.permission !== "granted") return;
+    const notificationKey = `worktime-system-notification-${props.uid}-${todayISO}`;
+    if (localStorage.getItem(notificationKey)) return;
+
+    try {
+      new Notification("오늘 근무시간 안내", {
+        body: `오늘 근무시간은 ${entry.start}부터 ${entry.end}까지입니다.`,
+        icon: `${import.meta.env.BASE_URL}icon-192.png`,
+        tag: `worktime-${todayISO}`,
+      });
+      localStorage.setItem(notificationKey, "shown");
+    } catch {
+      // 브라우저가 시스템 알림을 지원하지 않아도 앱 팝업은 계속 표시합니다.
+    }
+  }, [byDate, props.uid, todayISO]);
+
+  async function requestTodayNotificationPermission() {
+    if (!("Notification" in window)) {
+      alert("이 브라우저는 시스템 알림을 지원하지 않습니다.");
+      return;
+    }
+    const permission = await Notification.requestPermission();
+    if (permission !== "granted") {
+      alert("브라우저 또는 휴대폰 설정에서 알림을 허용해주세요.");
+      return;
+    }
+
+    if (todayNotice) {
+      new Notification("오늘 근무시간 안내", {
+        body: `오늘 근무시간은 ${todayNotice.start}부터 ${todayNotice.end}까지입니다.`,
+        icon: `${import.meta.env.BASE_URL}icon-192.png`,
+        tag: `worktime-${todayISO}`,
+      });
+      localStorage.setItem(`worktime-system-notification-${props.uid}-${todayISO}`, "shown");
+    }
+  }
+
   // ✅ 유효기간(YYYY-MM) 기준으로 “누적 차감” 집계 범위를 잡음
   const ymLE = (a: string, b: string) => a <= b;
 
-  const validUntilYM = (leaveSettings.annualValidUntilYM ?? "").trim();
+  const validUntilYM = (leaveSettings.annualValidUntilYM ?? "").trim(); // 예: "2026-06"
   const expired = validUntilYM ? !ymLE(props.ym, validUntilYM) : false;
 
+  // 집계 시작월: 유효기간의 연도 1월(원하면 settings로 startYM 따로 둬도 됨)
   const periodStartYM = validUntilYM
     ? `${validUntilYM.slice(0, 4)}-01`
     : `${props.ym.slice(0, 4)}-01`;
 
+  // 화면이 유효기간을 넘으면 유효기간 월까지만 집계
   const cutYM = validUntilYM
-    ? ymLE(props.ym, validUntilYM)
-      ? props.ym
-      : validUntilYM
+    ? (ymLE(props.ym, validUntilYM) ? props.ym : validUntilYM)
     : props.ym;
 
+  // ✅ 누적 연차 차감/여성휴가 월별 카운트
   const { annualUsed, femaleUsedByYM } = useLeaveUsage(props.uid, periodStartYM, cutYM);
 
   const femaleUsedThisMonth = femaleUsedByYM[props.ym] ?? 0;
@@ -123,7 +171,7 @@ function Main(props: {
     for (let d = 1; d <= dim; d++) {
       const iso = `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
       const weekend = isWeekend(iso);
-      const isHol = Boolean(mergedHolidays[iso]);
+      const isHol = Boolean(holidays[iso]);
 
       if (!weekend) {
         if (!isHol) biz += 1;
@@ -139,17 +187,19 @@ function Main(props: {
       bizDays: biz,
       holidayCount: hol,
     };
-  }, [props.ym, mergedHolidays, byDate]);
+  }, [props.ym, holidays, byDate]);
 
   const editEntry = props.editISO ? byDate[props.editISO] ?? null : null;
-  const editHoliday = props.editISO ? mergedHolidays[props.editISO] : undefined;
+  const editHoliday = props.editISO ? holidays[props.editISO] : undefined;
 
   const [bulkOpen, setBulkOpen] = useState(false);
   const { plan: bulkPlan, setPlan: setBulkPlan, savePlan, resetPlan } = useBulkPlan(props.uid);
   const [confirmOpen, setConfirmOpen] = useState(false);
+
+  // ✅ 연차 설정 팝업(총 연차/유효기간 입력)
   const [leaveModalOpen, setLeaveModalOpen] = useState(false);
 
-  useEffect(() => {
+   useEffect(() => {
     const open = leaveModalOpen || confirmOpen || bulkOpen || Boolean(props.editISO);
     if (!open) return;
 
@@ -171,7 +221,7 @@ function Main(props: {
       const iso = `${y}-${mm}-${String(d).padStart(2, "0")}`;
 
       if (plan.skipWeekends && isWeekend(iso)) continue;
-      if (plan.skipHolidays && mergedHolidays[iso]) continue;
+      if (plan.skipHolidays && holidays[iso]) continue;
 
       const exist = byDate[iso];
 
@@ -197,9 +247,10 @@ function Main(props: {
         start: rule.start,
         end: rule.end,
         breakEnabled,
-        breakStart: breakEnabled ? bs || "12:00" : "",
-        breakEnd: breakEnabled ? be || "13:00" : "",
+        breakStart: breakEnabled ? (bs || "12:00") : "",
+        breakEnd: breakEnabled ? (be || "13:00") : "",
         memo: exist?.memo ?? "",
+        // ✅ leaveType은 기존 유지 (일괄등록이 근무만 채우는 컨셉)
         leaveType: exist?.leaveType ?? "none",
         updatedAt: Date.now(),
       };
@@ -216,21 +267,12 @@ function Main(props: {
     props.setEditISO(iso);
   }
 
+  function saveEntry(entry: DayEntry) {
+    upsert({ ...entry, updatedAt: Date.now() });
+  }
+
   return (
     <main className="page">
-      {todayNoticeOpen && todayEntry?.start && todayEntry?.end ? (
-        <div className="todayNotice" role="status">
-          <div className="todayNoticeText">
-            <div className="todayNoticeTitle">오늘 근무시간</div>
-            <div className="todayNoticeRange">{todayEntry.start}부터 {todayEntry.end}까지입니다.</div>
-          </div>
-          {"Notification" in window && Notification.permission !== "granted" ? (
-            <button className="notifyEnable" onClick={enableNotifications}>알림 허용</button>
-          ) : null}
-          <button className="noticeClose" onClick={() => setTodayNoticeOpen(false)}>닫기</button>
-        </div>
-      ) : null}
-
       <MonthHeader
         ymLabel={props.ymLabel}
         onPrev={() => props.setYM(addMonths(props.ym, -1))}
@@ -244,6 +286,7 @@ function Main(props: {
         holidays={holidayCount}
       />
 
+      {/* ✅ 연차/여성휴가 요약: 컴팩트 박스(입력은 팝업으로 분리) */}
       <div className="summary glass compactLeaveBox">
         <div className="summaryRow">
           <div className="k">연차 잔여</div>
@@ -283,19 +326,15 @@ function Main(props: {
           if (!c.inMonth) return <div key={idx} className="cell empty" />;
 
           const weekend = isWeekend(c.iso);
-          const hol = mergedHolidays[c.iso];
-          const manualHol = manualHolidays[c.iso];
+          const hol = holidays[c.iso];
           const entry = byDate[c.iso];
           const hours = entry?.hours ?? 0;
           const memo = entry?.memo ?? "";
           const range = formatWorkRange(entry ?? null);
-          const isHoliday = !!hol;
           const isSubHoliday = !!hol?.substitute;
           const isToday = c.iso === todayISO;
           const leaveType = byDate[c.iso]?.leaveType ?? "none";
           const leaveText = leaveLabel(leaveType);
-          const showWorkTime = !isHoliday;
-          const manualHolidayText = manualHol?.localName?.trim() ?? "";
 
           return (
             <div
@@ -319,17 +358,11 @@ function Main(props: {
                 )}
               </div>
 
-              {isSubHoliday ? (
+              {hol && isSubHoliday ? (
                 <div className="subLine">
                   <span className="subTag">대체</span>
                 </div>
               ) : null}
-
-              {manualHolidayText && (
-                <div className="manualHolidayLine" title={manualHolidayText}>
-                  {manualHolidayText}
-                </div>
-              )}
 
               {memo.trim() && (
                 <div className="memoLine" title={memo}>
@@ -337,8 +370,7 @@ function Main(props: {
                 </div>
               )}
 
-              {showWorkTime &&
-                range &&
+              {range &&
                 (() => {
                   const [s, e] = range.split("-");
                   return (
@@ -350,7 +382,7 @@ function Main(props: {
                   );
                 })()}
 
-              {leaveType !== "none" && (
+                {leaveType !== "none" && (
                 <div className="leaveLine">
                   <span className={["leavePill", `lv-${leaveType}`].join(" ")}>
                     {leaveText}
@@ -358,44 +390,44 @@ function Main(props: {
                 </div>
               )}
 
-              {showWorkTime && (
-                <div className="workHours">
-                  <span className={hours === 0 ? "h0" : "h"}>
-                    {hours.toFixed(2)}h
-                  </span>
-                </div>
-              )}
+              <div className="workHours">
+                <span className={hours === 0 ? "h0" : "h"}>{hours.toFixed(2)}h</span>
+              </div>
             </div>
-          );
+          ); 
         }}
       />
+
+      {todayNotice ? (
+        <div className="todayNoticeOverlay" onClick={() => setTodayNotice(null)}>
+          <div className="todayNoticeCard" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true">
+            <div className="todayNoticeIcon">⏰</div>
+            <div className="todayNoticeTitle">오늘 근무시간 안내</div>
+            <div className="todayNoticeText">
+              오늘 근무시간은 <b>{todayNotice.start}</b>부터 <b>{todayNotice.end}</b>까지입니다.
+            </div>
+            <div className="todayNoticeActions">
+              {typeof Notification !== "undefined" && Notification.permission !== "granted" ? (
+                <button className="btn ghost" onClick={requestTodayNotificationPermission}>휴대폰 알림 허용</button>
+              ) : null}
+              <button className="btn primary" onClick={() => setTodayNotice(null)}>확인</button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <EditSheet
         open={Boolean(props.editISO)}
         date={props.editISO ?? ""}
         isHoliday={Boolean(editHoliday)}
         holidayName={editHoliday?.localName}
-        manualHolidayEnabled={Boolean(props.editISO && manualHolidays[props.editISO])}
-        manualHolidayName={props.editISO ? manualHolidays[props.editISO]?.localName ?? "" : ""}
         initial={editEntry}
         onClose={() => props.setEditISO(null)}
-        onSave={async (entry, manualHoliday) => {
-          upsert({ ...entry, updatedAt: Date.now() });
-
-          if (!props.editISO) return;
-
-          if (manualHoliday.enabled) {
-            await upsertManualHoliday({
-              date: props.editISO,
-              localName: manualHoliday.name,
-            });
-          } else {
-            await removeManualHoliday(props.editISO);
-          }
-        }}
+        onSave={saveEntry}
         femaleUsedThisMonth={femaleUsedThisMonth}
       />
 
+      {/* ✅ 연차 설정 팝업 */}
       {leaveModalOpen ? (
         <div className="confirmOverlay" onClick={() => setLeaveModalOpen(false)}>
           <div className="confirmModal" onClick={(e) => e.stopPropagation()}>
@@ -412,9 +444,7 @@ function Main(props: {
                   min={0}
                   step={0.25}
                   value={leaveSettings.annualTotal ?? 0}
-                  onChange={(e) =>
-                    setLeaveSettings({ ...leaveSettings, annualTotal: Number(e.target.value) })
-                  }
+                  onChange={(e) => setLeaveSettings({ ...leaveSettings, annualTotal: Number(e.target.value) })}
                 />
               </div>
 
@@ -426,9 +456,7 @@ function Main(props: {
                   className="input"
                   type="month"
                   value={leaveSettings.annualValidUntilYM ?? ""}
-                  onChange={(e) =>
-                    setLeaveSettings({ ...leaveSettings, annualValidUntilYM: e.target.value })
-                  }
+                  onChange={(e) => setLeaveSettings({ ...leaveSettings, annualValidUntilYM: e.target.value })}
                 />
               </div>
             </div>
@@ -451,6 +479,7 @@ function Main(props: {
         </div>
       ) : null}
 
+      {/* 일괄등록 확인 */}
       {confirmOpen ? (
         <div className="confirmOverlay" onClick={() => setConfirmOpen(false)}>
           <div className="confirmModal" onClick={(e) => e.stopPropagation()}>

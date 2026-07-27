@@ -1,61 +1,85 @@
-import { useEffect, useMemo, useState } from "react";
-import { SHIFT_PRESETS } from "../utils/time";
+import { useMemo, useState } from "react";
+import { SHIFT_PRESETS, type ShiftPreset } from "../utils/time";
 
-export type ShiftPreset = {
-  key: string;
-  label: string;
-  start: string;
-  end: string;
-  breakDefault: boolean;
-  breakStart?: string;
-  breakEnd?: string;
-  custom?: boolean;
-};
+const CUSTOM_KEY = "worktime-custom-shift-presets-v1";
+const HIDDEN_KEY = "worktime-hidden-default-shifts-v1";
 
-const CUSTOM_KEY = "worktime.customShiftPresets.v1";
-const HIDDEN_KEY = "worktime.hiddenShiftPresets.v1";
-
-function read<T>(key: string, fallback: T): T {
+function readJSON<T>(key: string, fallback: T): T {
   try {
     const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : fallback;
+    return raw ? (JSON.parse(raw) as T) : fallback;
   } catch {
     return fallback;
   }
 }
 
+function persist<T>(key: string, value: T) {
+  localStorage.setItem(key, JSON.stringify(value));
+}
+
 export function useShiftPresets() {
-  const [custom, setCustom] = useState<ShiftPreset[]>(() => read(CUSTOM_KEY, []));
-  const [hidden, setHidden] = useState<string[]>(() => read(HIDDEN_KEY, []));
+  const [customPresets, setCustomPresets] = useState<ShiftPreset[]>(() =>
+    readJSON<ShiftPreset[]>(CUSTOM_KEY, [])
+  );
+  const [hiddenDefaultKeys, setHiddenDefaultKeys] = useState<string[]>(() =>
+    readJSON<string[]>(HIDDEN_KEY, [])
+  );
 
-  useEffect(() => localStorage.setItem(CUSTOM_KEY, JSON.stringify(custom)), [custom]);
-  useEffect(() => localStorage.setItem(HIDDEN_KEY, JSON.stringify(hidden)), [hidden]);
+  const visiblePresets = useMemo(
+    () => [
+      ...SHIFT_PRESETS.filter((preset) => !hiddenDefaultKeys.includes(preset.key)),
+      ...customPresets,
+    ],
+    [customPresets, hiddenDefaultKeys]
+  );
 
-  const all = useMemo<ShiftPreset[]>(() => [
-    ...SHIFT_PRESETS.map((x) => ({ ...x, custom: false })),
-    ...custom,
-  ], [custom]);
+  function addCustomPreset(input: Omit<ShiftPreset, "key" | "isCustom">) {
+    const same = customPresets.find(
+      (preset) =>
+        preset.start === input.start &&
+        preset.end === input.end &&
+        preset.breakDefault === input.breakDefault &&
+        preset.breakStart === input.breakStart &&
+        preset.breakEnd === input.breakEnd
+    );
+    if (same) return same;
 
-  const visible = useMemo(() => all.filter((x) => !hidden.includes(x.key)), [all, hidden]);
-
-  function add(preset: Omit<ShiftPreset, "key" | "custom">) {
-    const key = `custom-${Date.now()}`;
-    setCustom((prev) => [...prev, { ...preset, key, custom: true }]);
-    return key;
+    const nextPreset: ShiftPreset = {
+      ...input,
+      key: `custom-${Date.now()}`,
+      isCustom: true,
+    };
+    const next = [...customPresets, nextPreset];
+    setCustomPresets(next);
+    persist(CUSTOM_KEY, next);
+    return nextPreset;
   }
 
-  function remove(key: string) {
-    setCustom((prev) => prev.filter((x) => x.key !== key));
-    setHidden((prev) => prev.filter((x) => x !== key));
+  function removeCustomPreset(key: string) {
+    const next = customPresets.filter((preset) => preset.key !== key);
+    setCustomPresets(next);
+    persist(CUSTOM_KEY, next);
   }
 
-  function hide(key: string) {
-    setHidden((prev) => prev.includes(key) ? prev : [...prev, key]);
+  function hideDefaultPreset(key: string) {
+    if (hiddenDefaultKeys.includes(key)) return;
+    const next = [...hiddenDefaultKeys, key];
+    setHiddenDefaultKeys(next);
+    persist(HIDDEN_KEY, next);
   }
 
-  function restore() {
-    setHidden([]);
+  function restoreDefaultPresets() {
+    setHiddenDefaultKeys([]);
+    persist(HIDDEN_KEY, []);
   }
 
-  return { all, visible, hidden, add, remove, hide, restore };
+  return {
+    visiblePresets,
+    customPresets,
+    hiddenDefaultKeys,
+    addCustomPreset,
+    removeCustomPreset,
+    hideDefaultPreset,
+    restoreDefaultPresets,
+  };
 }
