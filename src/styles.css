@@ -2062,3 +2062,289 @@ input[type="month"]{
   .cell{ min-height:96px; padding-left:3px; padding-right:3px; }
   .workRange, .rangeLine{ font-size:9.5px; }
 }
+
+/* ===== 캘린더 일일 합계 표시 전환 ===== */
+.calendarViewBar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:10px 12px;
+  margin-bottom:10px;
+  border:1px solid rgba(255,255,255,.16);
+  border-radius:16px;
+}
+.calendarViewTitle{ font-size:13px; font-weight:900; }
+.calendarViewDesc{ margin-top:3px; font-size:11px; color:var(--muted); }
+.calendarViewBtn{ flex:0 0 auto; padding:8px 12px; font-size:12px; font-weight:800; }
+.calendarDisplay{ min-width:0; }
+
+/* 하루 합계를 숨기면 확보된 세로 공간만큼 주요 내용을 확대합니다. */
+.dailyHoursHidden .cell{
+  justify-content:flex-start;
+  gap:4px;
+}
+.dailyHoursHidden .dayNum{
+  font-size:16px;
+  line-height:1.05;
+}
+.dailyHoursHidden .memoLine{
+  margin-top:4px;
+  font-size:13px;
+  line-height:1.22;
+  white-space:normal;
+  overflow:hidden;
+  text-overflow:clip;
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  word-break:keep-all;
+  overflow-wrap:anywhere;
+}
+.dailyHoursHidden .workRange{
+  margin-top:3px;
+  font-size:15px;
+  line-height:1.12;
+  justify-content:flex-start;
+}
+.dailyHoursHidden .leaveLine{
+  margin-top:4px;
+}
+.dailyHoursHidden .leavePill{
+  font-size:12px;
+  line-height:1.15;
+  padding:4px 7px;
+}
+
+@media (max-width:448px){
+  .calendarViewBar{ padding:9px 10px; }
+  .dailyHoursHidden .cell{ gap:3px; }
+  .dailyHoursHidden .dayNum{ font-size:16px; }
+  .dailyHoursHidden .memoLine{ font-size:12px; -webkit-line-clamp:2; }
+  .dailyHoursHidden .workRange{ font-size:14px; }
+  .dailyHoursHidden .leavePill{ font-size:11px; padding:3px 6px; }
+}
+
+@media (max-width:390px){
+  .calendarViewTitle{ font-size:12px; }
+  .calendarViewDesc{ font-size:10px; }
+  .calendarViewBtn{ padding:7px 10px; font-size:11px; }
+  .dailyHoursHidden .dayNum{ font-size:15px; }
+  .dailyHoursHidden .memoLine{ font-size:11px; line-height:1.18; }
+  .dailyHoursHidden .workRange{
+    font-size:13px;
+    align-items:flex-start;
+    justify-content:flex-start;
+  }
+  .dailyHoursHidden .workRange .ws,
+  .dailyHoursHidden .workRange .we{ font-size:13px; }
+  .dailyHoursHidden .leavePill{ font-size:10px; padding:3px 5px; }
+}
+
+/* ===== 일일 합계 숨김 모드: 균형 잡힌 캘린더 글자 크기 ===== */
+.dailyHoursHidden .cell{
+  justify-content:flex-start;
+  gap:3px;
+  padding-top:7px;
+  padding-bottom:6px;
+}
+.dailyHoursHidden .dayNum{
+  font-size:14px;
+  line-height:1.05;
+}
+.dailyHoursHidden .memoLine{
+  margin-top:2px;
+  font-size:11.5px;
+  line-height:1.18;
+  font-weight:700;
+  white-space:normal;
+  overflow:hidden;
+  text-overflow:clip;
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  word-break:keep-all;
+  overflow-wrap:anywhere;
+}
+.dailyHoursHidden .workRange{
+  margin-top:2px;
+  font-size:12.5px;
+  line-height:1.12;
+  letter-spacing:-.45px;
+  justify-content:flex-start;
+  align-items:flex-start;
+  column-gap:2px;
+  row-gap:0;
+}
+.dailyHoursHidden .workRange .ws,
+.dailyHoursHidden .workRange .we{
+  font-size:inherit;
+}
+.dailyHoursHidden .leaveLine{
+  margin-top:2px;
+  min-height:0;
+}
+.dailyHoursHidden .leavePill{
+  font-size:10.5px;
+  line-height:1.1;
+  height:auto;
+  min-height:18px;
+  padding:3px 6px;
+}
+
+@media (max-width:448px){
+  .dailyHoursHidden .cell{
+    gap:3px;
+    padding:7px 4px 6px;
+  }
+  .dailyHoursHidden .dayNum{ font-size:14px; }
+  .dailyHoursHidden .memoLine{
+    font-size:10.5px;
+    line-height:1.18;
+    -webkit-line-clamp:2;
+  }
+  .dailyHoursHidden .workRange{
+    font-size:12px;
+    line-height:1.12;
+  }
+  .dailyHoursHidden .leavePill{
+    font-size:10px;
+    padding:2px 5px;
+    min-height:17px;
+  }
+}
+
+@media (max-width:390px){
+  .dailyHoursHidden .cell{
+    gap:2px;
+    padding-left:3px;
+    padding-right:3px;
+  }
+  .dailyHoursHidden .dayNum{ font-size:13.5px; }
+  .dailyHoursHidden .memoLine{
+    font-size:10px;
+    line-height:1.16;
+  }
+  .dailyHoursHidden .workRange,
+  .dailyHoursHidden .workRange .ws,
+  .dailyHoursHidden .workRange .we{
+    font-size:11.5px;
+  }
+  .dailyHoursHidden .leavePill{
+    font-size:9.5px;
+    padding:2px 4px;
+  }
+}
+
+/* ===== 숨김 모드 최종 보정: 시간/메모/휴가 균형 및 잘림 방지 ===== */
+@media (max-width: 448px){
+  .dailyHoursHidden .grid{
+    grid-auto-rows: 104px;
+  }
+
+  .dailyHoursHidden .cell{
+    min-height:0;
+    height:100%;
+    padding:7px 4px 6px;
+    gap:2px;
+    justify-content:flex-start;
+    overflow:hidden;
+  }
+
+  .dailyHoursHidden .dayNum{
+    flex:0 0 auto;
+    font-size:13px;
+    line-height:1;
+  }
+
+  .dailyHoursHidden .memoLine{
+    order:2;
+    flex:0 0 auto;
+    margin-top:1px;
+    font-size:9.5px;
+    line-height:1.14;
+    font-weight:700;
+    display:-webkit-box;
+    -webkit-box-orient:vertical;
+    -webkit-line-clamp:2;
+    white-space:normal;
+    overflow:hidden;
+    overflow-wrap:anywhere;
+    word-break:keep-all;
+  }
+
+  .dailyHoursHidden .workRange{
+    order:3;
+    flex:0 0 auto;
+    margin-top:1px;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    justify-content:flex-start;
+    gap:0;
+    font-size:11px;
+    line-height:1.08;
+    letter-spacing:-.35px;
+    white-space:normal;
+  }
+
+  .dailyHoursHidden .workRange .dash{
+    display:none;
+  }
+
+  .dailyHoursHidden .workRange .ws,
+  .dailyHoursHidden .workRange .we{
+    display:block;
+    font-size:inherit;
+    line-height:inherit;
+    white-space:nowrap;
+  }
+
+  .dailyHoursHidden .leaveLine{
+    order:4;
+    flex:0 0 auto;
+    min-height:16px;
+    margin-top:2px;
+    overflow:visible;
+  }
+
+  .dailyHoursHidden .leavePill{
+    height:16px;
+    min-height:16px;
+    max-width:100%;
+    padding:0 5px;
+    font-size:9px;
+    line-height:1;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+}
+
+@media (max-width: 390px){
+  .dailyHoursHidden .grid{
+    grid-auto-rows:100px;
+  }
+  .dailyHoursHidden .cell{
+    padding:6px 3px 5px;
+    gap:2px;
+  }
+  .dailyHoursHidden .dayNum{ font-size:12.5px; }
+  .dailyHoursHidden .memoLine{
+    font-size:9px;
+    line-height:1.12;
+  }
+  .dailyHoursHidden .workRange,
+  .dailyHoursHidden .workRange .ws,
+  .dailyHoursHidden .workRange .we{
+    font-size:10.5px;
+    line-height:1.07;
+  }
+  .dailyHoursHidden .leavePill{
+    height:15px;
+    min-height:15px;
+    font-size:8.5px;
+    padding:0 4px;
+  }
+  .dailyHoursHidden .leaveLine{ min-height:15px; }
+}
