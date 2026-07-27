@@ -75,6 +75,24 @@ function Main(props: {
   const { holidays } = useHolidays(props.ym, "KR");
   const { byDate, upsert } = useMonthData(props.uid, props.ym);
   const [todayNotice, setTodayNotice] = useState<{ start: string; end: string } | null>(null);
+  const [notificationSettingsOpen, setNotificationSettingsOpen] = useState(false);
+  const notificationStorageKey = `worktime-notification-settings-${props.uid}`;
+  const [notificationEnabled, setNotificationEnabled] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(notificationStorageKey) ?? "{}");
+      return Boolean(saved.enabled);
+    } catch {
+      return false;
+    }
+  });
+  const [notificationTime, setNotificationTime] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(notificationStorageKey) ?? "{}");
+      return typeof saved.time === "string" ? saved.time : "08:00";
+    } catch {
+      return "08:00";
+    }
+  });
 
   const { settings: leaveSettings, setSettings: setLeaveSettings, saveSettings } =
     useLeaveSettings(props.uid);
@@ -91,47 +109,79 @@ function Main(props: {
     const entry = byDate[todayISO];
     if (!entry?.start || !entry?.end || (entry.hours ?? 0) <= 0) return;
 
-    const sessionKey = `worktime-today-popup-${props.uid}-${todayISO}`;
-    if (!sessionStorage.getItem(sessionKey)) {
+    // 날짜별 하루 한 번만 표시합니다. 앱/브라우저를 다시 열어도 같은 날에는 재표시하지 않습니다.
+    const popupKey = `worktime-today-popup-${props.uid}-${todayISO}`;
+    if (!localStorage.getItem(popupKey)) {
       setTodayNotice({ start: entry.start, end: entry.end });
-      sessionStorage.setItem(sessionKey, "shown");
-    }
-
-    if (!("Notification" in window) || Notification.permission !== "granted") return;
-    const notificationKey = `worktime-system-notification-${props.uid}-${todayISO}`;
-    if (localStorage.getItem(notificationKey)) return;
-
-    try {
-      new Notification("오늘 근무시간 안내", {
-        body: `오늘 근무시간은 ${entry.start}부터 ${entry.end}까지입니다.`,
-        icon: `${import.meta.env.BASE_URL}icon-192.png`,
-        tag: `worktime-${todayISO}`,
-      });
-      localStorage.setItem(notificationKey, "shown");
-    } catch {
-      // 브라우저가 시스템 알림을 지원하지 않아도 앱 팝업은 계속 표시합니다.
+      localStorage.setItem(popupKey, "shown");
     }
   }, [byDate, props.uid, todayISO]);
 
-  async function requestTodayNotificationPermission() {
+  useEffect(() => {
+    localStorage.setItem(
+      notificationStorageKey,
+      JSON.stringify({ enabled: notificationEnabled, time: notificationTime })
+    );
+  }, [notificationEnabled, notificationTime, notificationStorageKey]);
+
+  useEffect(() => {
+    if (!notificationEnabled) return;
+
+    const checkAndNotify = () => {
+      const entry = byDate[todayISO];
+      if (!entry?.start || !entry?.end || (entry.hours ?? 0) <= 0) return;
+      if (!("Notification" in window) || Notification.permission !== "granted") return;
+
+      const now = new Date();
+      const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+      if (currentTime < notificationTime) return;
+
+      const notificationKey = `worktime-system-notification-${props.uid}-${todayISO}-${notificationTime}`;
+      if (localStorage.getItem(notificationKey)) return;
+
+      try {
+        new Notification("오늘 근무시간 안내", {
+          body: `오늘 근무시간은 ${entry.start}부터 ${entry.end}까지입니다.`,
+          icon: `${import.meta.env.BASE_URL}icon-192.png`,
+          tag: `worktime-${todayISO}-${notificationTime}`,
+        });
+        localStorage.setItem(notificationKey, "shown");
+      } catch {
+        // 알림을 지원하지 않는 환경에서는 앱 기능을 그대로 유지합니다.
+      }
+    };
+
+    checkAndNotify();
+    const timer = window.setInterval(checkAndNotify, 30_000);
+    window.addEventListener("focus", checkAndNotify);
+    document.addEventListener("visibilitychange", checkAndNotify);
+
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("focus", checkAndNotify);
+      document.removeEventListener("visibilitychange", checkAndNotify);
+    };
+  }, [byDate, notificationEnabled, notificationTime, props.uid, todayISO]);
+
+  async function setSystemNotificationEnabled(enabled: boolean) {
+    if (!enabled) {
+      setNotificationEnabled(false);
+      return;
+    }
+
     if (!("Notification" in window)) {
       alert("이 브라우저는 시스템 알림을 지원하지 않습니다.");
       return;
     }
-    const permission = await Notification.requestPermission();
+
+    let permission = Notification.permission;
+    if (permission !== "granted") permission = await Notification.requestPermission();
     if (permission !== "granted") {
-      alert("브라우저 또는 휴대폰 설정에서 알림을 허용해주세요.");
+      alert("브라우저 또는 아이폰 설정에서 알림을 허용해주세요. 아이폰은 홈 화면에 추가한 웹 앱에서 알림이 더 안정적으로 작동합니다.");
       return;
     }
 
-    if (todayNotice) {
-      new Notification("오늘 근무시간 안내", {
-        body: `오늘 근무시간은 ${todayNotice.start}부터 ${todayNotice.end}까지입니다.`,
-        icon: `${import.meta.env.BASE_URL}icon-192.png`,
-        tag: `worktime-${todayISO}`,
-      });
-      localStorage.setItem(`worktime-system-notification-${props.uid}-${todayISO}`, "shown");
-    }
+    setNotificationEnabled(true);
   }
 
   // ✅ 유효기간(YYYY-MM) 기준으로 “누적 차감” 집계 범위를 잡음
@@ -200,7 +250,7 @@ function Main(props: {
   const [leaveModalOpen, setLeaveModalOpen] = useState(false);
 
    useEffect(() => {
-    const open = leaveModalOpen || confirmOpen || bulkOpen || Boolean(props.editISO);
+    const open = leaveModalOpen || notificationSettingsOpen || confirmOpen || bulkOpen || Boolean(props.editISO);
     if (!open) return;
 
     const prev = document.body.style.overflow;
@@ -208,7 +258,7 @@ function Main(props: {
     return () => {
       document.body.style.overflow = prev;
     };
-  }, [leaveModalOpen, confirmOpen, bulkOpen, props.editISO]);
+  }, [leaveModalOpen, notificationSettingsOpen, confirmOpen, bulkOpen, props.editISO]);
 
   async function applyBulkPlan(plan: BulkPlan) {
     const [y, m] = props.ym.split("-").map(Number);
@@ -320,6 +370,18 @@ function Main(props: {
         </button>
       </div>
 
+      <div className="notificationBar glass">
+        <div>
+          <div className="notificationBarTitle">근무시간 알림</div>
+          <div className="notificationBarDesc">
+            {notificationEnabled ? `매일 ${notificationTime} · 사용 중` : "사용 안 함"}
+          </div>
+        </div>
+        <button className="btn ghost notificationSettingBtn" onClick={() => setNotificationSettingsOpen(true)}>
+          설정
+        </button>
+      </div>
+
       <CalendarGrid
         ym={props.ym}
         renderCell={(c: Cell, idx: number) => {
@@ -407,10 +469,48 @@ function Main(props: {
               오늘 근무시간은 <b>{todayNotice.start}</b>부터 <b>{todayNotice.end}</b>까지입니다.
             </div>
             <div className="todayNoticeActions">
-              {typeof Notification !== "undefined" && Notification.permission !== "granted" ? (
-                <button className="btn ghost" onClick={requestTodayNotificationPermission}>휴대폰 알림 허용</button>
-              ) : null}
+              <button className="btn ghost" onClick={() => {
+                setTodayNotice(null);
+                setNotificationSettingsOpen(true);
+              }}>알림 설정</button>
               <button className="btn primary" onClick={() => setTodayNotice(null)}>확인</button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {notificationSettingsOpen ? (
+        <div className="confirmOverlay" onClick={() => setNotificationSettingsOpen(false)}>
+          <div className="confirmModal notificationModal" onClick={(event) => event.stopPropagation()}>
+            <div className="confirmTitle">시스템 알림 설정</div>
+            <div className="notificationSettingRow">
+              <div>
+                <div className="notificationSettingLabel">시스템 알림</div>
+                <div className="notificationSettingHint">설정한 시간 이후 앱이 열려 있을 때 하루 한 번 표시</div>
+              </div>
+              <button
+                type="button"
+                className={notificationEnabled ? "toggleSwitch on" : "toggleSwitch"}
+                aria-pressed={notificationEnabled}
+                onClick={() => setSystemNotificationEnabled(!notificationEnabled)}
+              >
+                <span />
+              </button>
+            </div>
+            <label className="notificationTimeField">
+              <span>알림 시간</span>
+              <input
+                className="input"
+                type="time"
+                value={notificationTime}
+                onChange={(event) => setNotificationTime(event.target.value || "08:00")}
+              />
+            </label>
+            <div className="notificationIosNote">
+              아이폰에서는 Safari 공유 메뉴의 ‘홈 화면에 추가’로 설치하고 알림을 허용해야 시스템 알림이 안정적으로 표시됩니다.
+            </div>
+            <div className="confirmActions">
+              <button className="cBtn primary" onClick={() => setNotificationSettingsOpen(false)}>저장</button>
             </div>
           </div>
         </div>
