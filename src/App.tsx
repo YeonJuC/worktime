@@ -1,4 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
+import { doc, setDoc } from "firebase/firestore";
+import { getToken } from "firebase/messaging";
+import { db, messagingPromise } from "./firebase";
 import AuthGate from "./components/AuthGate";
 import MonthHeader from "./components/MonthHeader";
 import CalendarGrid, { type Cell } from "./components/CalendarGrid";
@@ -163,25 +166,58 @@ function Main(props: {
     };
   }, [byDate, notificationEnabled, notificationTime, props.uid, todayISO]);
 
+  async function saveNotificationSettings(enabled: boolean, time = notificationTime) {
+    const ref = doc(db, "users", props.uid, "settings", "notification");
+    await setDoc(ref, {
+      enabled,
+      time,
+      timezone: "Asia/Seoul",
+      updatedAt: new Date().toISOString(),
+    }, { merge: true });
+  }
+
   async function setSystemNotificationEnabled(enabled: boolean) {
     if (!enabled) {
       setNotificationEnabled(false);
+      await saveNotificationSettings(false);
       return;
     }
 
-    if (!("Notification" in window)) {
-      alert("이 브라우저는 시스템 알림을 지원하지 않습니다.");
+    if (!("Notification" in window) || !("serviceWorker" in navigator)) {
+      alert("이 브라우저는 백그라운드 시스템 알림을 지원하지 않습니다.");
       return;
     }
 
     let permission = Notification.permission;
     if (permission !== "granted") permission = await Notification.requestPermission();
     if (permission !== "granted") {
-      alert("브라우저 또는 아이폰 설정에서 알림을 허용해주세요. 아이폰은 홈 화면에 추가한 웹 앱에서 알림이 더 안정적으로 작동합니다.");
+      alert("아이폰 설정에서 알림을 허용해주세요. Safari에서 홈 화면에 추가한 뒤 실행해야 합니다.");
       return;
     }
 
-    setNotificationEnabled(true);
+    try {
+      const registration = await navigator.serviceWorker.register(`${import.meta.env.BASE_URL}firebase-messaging-sw.js`);
+      const messaging = await messagingPromise;
+      if (!messaging) throw new Error("messaging-not-supported");
+
+      const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY as string;
+      if (!vapidKey) throw new Error("missing-vapid-key");
+
+      const token = await getToken(messaging, { vapidKey, serviceWorkerRegistration: registration });
+      if (!token) throw new Error("missing-token");
+
+      await setDoc(doc(db, "users", props.uid, "settings", "notification"), {
+        enabled: true,
+        time: notificationTime,
+        timezone: "Asia/Seoul",
+        token,
+        updatedAt: new Date().toISOString(),
+      }, { merge: true });
+      setNotificationEnabled(true);
+    } catch (error) {
+      console.error("[background notification setup]", error);
+      alert("백그라운드 알림 설정에 실패했습니다. 홈 화면에 추가했는지와 Firebase VAPID 키 설정을 확인해주세요.");
+    }
   }
 
   // ✅ 유효기간(YYYY-MM) 기준으로 “누적 차감” 집계 범위를 잡음
@@ -486,7 +522,7 @@ function Main(props: {
             <div className="notificationSettingRow">
               <div>
                 <div className="notificationSettingLabel">시스템 알림</div>
-                <div className="notificationSettingHint">설정한 시간 이후 앱이 열려 있을 때 하루 한 번 표시</div>
+                <div className="notificationSettingHint">앱을 열지 않아도 설정한 시간에 하루 한 번 표시</div>
               </div>
               <button
                 type="button"
@@ -507,10 +543,13 @@ function Main(props: {
               />
             </label>
             <div className="notificationIosNote">
-              아이폰에서는 Safari 공유 메뉴의 ‘홈 화면에 추가’로 설치하고 알림을 허용해야 시스템 알림이 안정적으로 표시됩니다.
+              아이폰에서는 Safari 공유 메뉴의 ‘홈 화면에 추가’로 설치한 뒤 알림을 허용해야 앱을 닫아도 알림이 표시됩니다.
             </div>
             <div className="confirmActions">
-              <button className="cBtn primary" onClick={() => setNotificationSettingsOpen(false)}>저장</button>
+              <button className="cBtn primary" onClick={async () => {
+                if (notificationEnabled) await saveNotificationSettings(true, notificationTime);
+                setNotificationSettingsOpen(false);
+              }}>저장</button>
             </div>
           </div>
         </div>

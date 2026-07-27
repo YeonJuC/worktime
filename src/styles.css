@@ -2036,21 +2036,21 @@ input[type="month"]{
   .btn, .bulkBtn{ font-size:12px; }
   .weekCell{ padding:7px 0; font-size:10px; }
   .cell{
-    min-height:86px;
+    min-height:92px;
     padding:7px 4px 6px;
     justify-content:flex-start;
     gap:2px;
   }
-  .dayNum{ font-size:11px; }
+  .dayNum{ font-size:12px; }
   .holDot{ font-size:8px; }
-  .memoLine{ margin-top:2px; font-size:9px; line-height:1.15; }
-  .workRange, .rangeLine{ margin-top:2px; font-size:9px; line-height:1.15; letter-spacing:-.35px; }
+  .memoLine{ margin-top:2px; font-size:10px; line-height:1.18; overflow-wrap:anywhere; }
+  .workRange, .rangeLine{ margin-top:2px; font-size:10px; line-height:1.18; letter-spacing:-.45px; overflow-wrap:anywhere; }
   .workRange{ display:flex; flex-wrap:wrap; justify-content:flex-start; column-gap:1px; row-gap:0; }
   .workHours{ margin-top:auto; min-height:12px; line-height:1.05; }
-  .h, .h0{ font-size:9px; line-height:1.05; }
+  .h, .h0{ font-size:10px; line-height:1.08; }
   .leaveLine{ margin-top:1px; }
-  .leavePill{ font-size:8px; padding:2px 4px; line-height:1.1; }
-  .subTag{ margin-left:0; font-size:8px; padding:1px 4px; }
+  .leavePill{ font-size:9px; padding:2px 4px; line-height:1.1; }
+  .subTag{ margin-left:0; font-size:9px; padding:1px 4px; }
   .todayNoticeCard{ width:calc(100vw - 28px); padding:18px 14px; }
   .todayNoticeIcon{ font-size:30px; }
   .todayNoticeTitle{ font-size:17px; }
@@ -2059,6 +2059,6 @@ input[type="month"]{
 
 @media (max-width: 390px){
   .page{ padding-left:5px; padding-right:5px; }
-  .cell{ min-height:90px; padding-left:3px; padding-right:3px; }
-  .workRange, .rangeLine{ font-size:8.5px; }
+  .cell{ min-height:96px; padding-left:3px; padding-right:3px; }
+  .workRange, .rangeLine{ font-size:9.5px; }
 }
