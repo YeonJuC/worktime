@@ -2533,3 +2533,87 @@ input[type="month"]{
     font-size:11.5px;
   }
 }
+
+
+/* ======================================================================
+   일일 합계 숨김 모드 — 자연스러운 시각 위계 최종 스타일
+   ====================================================================== */
+@media (max-width: 448px){
+  .dailyHoursHidden .grid{ grid-auto-rows:104px; }
+  .dailyHoursHidden .cell{
+    height:100%; min-height:0; box-sizing:border-box;
+    padding:8px 5px 7px; gap:0; justify-content:flex-start;
+    align-items:stretch; overflow:hidden; font-variant-numeric:tabular-nums;
+  }
+  .dailyHoursHidden .cellTop{ min-height:17px; margin:0 0 4px; line-height:1; }
+  .dailyHoursHidden .dayNum{
+    font-size:14.5px; line-height:1; font-weight:850; letter-spacing:-.35px;
+  }
+  .dailyHoursHidden .memoLine{
+    order:2; flex:0 0 auto; margin:0 0 3px; max-width:100%;
+    font-size:9.7px; line-height:1.18; font-weight:650; letter-spacing:-.2px;
+    color:rgba(255,255,255,.72); white-space:normal; word-break:keep-all;
+    overflow-wrap:anywhere; display:-webkit-box; -webkit-box-orient:vertical;
+    -webkit-line-clamp:2; overflow:hidden;
+  }
+  .dailyHoursHidden .workRange{
+    order:3; flex:0 0 auto; margin:0; display:flex; flex-direction:column;
+    align-items:flex-start; gap:1px; max-width:100%; font-size:12.25px;
+    line-height:1.08; font-weight:780; letter-spacing:-.38px;
+    color:rgba(255,255,255,.92);
+  }
+  .dailyHoursHidden .workRange .dash{ display:none; }
+  .dailyHoursHidden .workRange .ws,
+  .dailyHoursHidden .workRange .we{
+    display:block; max-width:100%; font:inherit; line-height:inherit; white-space:nowrap;
+  }
+  .dailyHoursHidden .leaveLine{
+    order:4; flex:0 0 auto; min-height:17px; margin:5px 0 0;
+    line-height:1; overflow:visible;
+  }
+  .dailyHoursHidden .leavePill{
+    display:inline-flex; align-items:center; justify-content:center; box-sizing:border-box;
+    max-width:100%; height:17px; min-height:17px; padding:0 5px; border-width:1px;
+    font-size:9.2px; line-height:1; font-weight:720; letter-spacing:-.2px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .dailyHoursHidden .cell:has(.workRange):not(:has(.memoLine)):not(:has(.leaveLine)) .workRange{
+    margin-top:1px; font-size:12.6px; line-height:1.09;
+  }
+  .dailyHoursHidden .cell:has(.memoLine) .cellTop{ margin-bottom:3px; }
+  .dailyHoursHidden .cell:has(.memoLine) .memoLine{ margin-bottom:3px; }
+  .dailyHoursHidden .cell:has(.memoLine) .workRange{ font-size:11.8px; }
+  .dailyHoursHidden .cell:has(.leaveLine) .workRange{ font-size:11.9px; }
+  .dailyHoursHidden .cell:has(.leaveLine) .leaveLine{ margin-top:5px; }
+  .dailyHoursHidden .cell:has(.memoLine):has(.leaveLine){ padding-top:7px; padding-bottom:6px; }
+  .dailyHoursHidden .cell:has(.memoLine):has(.leaveLine) .dayNum{ font-size:13.8px; }
+  .dailyHoursHidden .cell:has(.memoLine):has(.leaveLine) .memoLine{
+    margin-bottom:2px; font-size:9px; line-height:1.13;
+  }
+  .dailyHoursHidden .cell:has(.memoLine):has(.leaveLine) .workRange{
+    font-size:11.1px; line-height:1.05;
+  }
+  .dailyHoursHidden .cell:has(.memoLine):has(.leaveLine) .leaveLine{ margin-top:3px; }
+  .dailyHoursHidden .cell:has(.memoLine):has(.leaveLine) .leavePill{
+    height:16px; min-height:16px; font-size:8.7px;
+  }
+  .dailyHoursHidden .cell.empty{ opacity:.72; }
+  .dailyHoursHidden .cell.weekend:not(.holiday) .dayNum{ color:rgba(255,255,255,.72); }
+}
+@media (max-width:390px){
+  .dailyHoursHidden .grid{ grid-auto-rows:101px; }
+  .dailyHoursHidden .cell{ padding:7px 4px 6px; }
+  .dailyHoursHidden .cellTop{ min-height:16px; margin-bottom:3px; }
+  .dailyHoursHidden .dayNum{ font-size:13.8px; }
+  .dailyHoursHidden .workRange,
+  .dailyHoursHidden .cell:has(.workRange):not(:has(.memoLine)):not(:has(.leaveLine)) .workRange{
+    font-size:11.8px;
+  }
+  .dailyHoursHidden .memoLine{ font-size:9.1px; line-height:1.14; }
+  .dailyHoursHidden .leaveLine{ margin-top:4px; }
+  .dailyHoursHidden .leavePill{
+    height:16px; min-height:16px; padding:0 4px; font-size:8.7px;
+  }
+  .dailyHoursHidden .cell:has(.memoLine) .workRange,
+  .dailyHoursHidden .cell:has(.leaveLine) .workRange{ font-size:11.2px; }
+}
