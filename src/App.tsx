@@ -363,39 +363,44 @@ function Main(props: {
         holidays={holidayCount}
       />
 
-      {/* ✅ 연차/여성휴가 요약: 컴팩트 박스(입력은 팝업으로 분리) */}
-      <div className="summary glass compactLeaveBox">
-        <div className="summaryRow">
-          <div className="k">연차 잔여</div>
-          <div className="v">
-            <b>{annualRemaining.toFixed(2)}개</b>
-            <span className="muted tiny">
-              사용 {annualUsed.toFixed(2)}개 / 총 {annualTotal || 0}개
-              {validUntilYM ? ` · ~${validUntilYM}` : ""}
-              {expired ? " (만료)" : ""}
-            </span>
+      <div className="dashboardStatsGrid leaveStatsGrid" aria-label="휴가 요약">
+        <section className="dashboardStatCard glass leaveStatCard">
+          <div className="dashboardStatHeader">
+            <div className="dashboardStatLabel">연차 잔여</div>
+            <button
+              type="button"
+              className="statTextButton"
+              onClick={() => setLeaveModalOpen(true)}
+              aria-label="연차 설정 열기"
+            >
+              설정
+            </button>
           </div>
-        </div>
-
-        <div className="summaryRow">
-          <div className="k">여성휴가(이번달)</div>
-          <div className="v">
-            <b>{femaleUsedThisMonth}/1</b>
+          <strong className="dashboardStatValue">{annualRemaining.toFixed(2)}개</strong>
+          <div className="dashboardStatMeta">
+            사용 {annualUsed.toFixed(2)}개 / 총 {annualTotal || 0}개
+            {validUntilYM ? ` · ~${validUntilYM}` : ""}
+            {expired ? " · 만료" : ""}
           </div>
-        </div>
+        </section>
 
-        <div className="leaveActions">
-          <button className="btn ghost leaveMiniBtn" onClick={() => setLeaveModalOpen(true)}>
-            연차 설정
-          </button>
-        </div>
+        <section className="dashboardStatCard glass leaveStatCard">
+          <div className="dashboardStatLabel">여성휴가(이번달)</div>
+          <span className={femaleUsedThisMonth > 0 ? "femaleStatusBadge used" : "femaleStatusBadge unused"}>
+            {femaleUsedThisMonth > 0 ? "사용" : "미사용"}
+          </span>
+          <div className="dashboardStatMeta femaleCount">{femaleUsedThisMonth}/1</div>
+        </section>
       </div>
 
-      <div className="bulkBar">
-        <button className="bulkBtn" onClick={() => setBulkOpen(true)}>
-          이번 달 일괄 등록
-        </button>
-      </div>
+      <button className="bulkRegisterCard glass" type="button" onClick={() => setBulkOpen(true)}>
+        <span className="bulkRegisterIcon" aria-hidden="true">▣</span>
+        <span className="bulkRegisterCopy">
+          <strong>이번 달 일괄 등록</strong>
+          <span>근무시간과 휴무를 한 번에 등록합니다.</span>
+        </span>
+        <span className="bulkRegisterAction">등록하기</span>
+      </button>
 
       <div className="calendarQuickSettings glass" aria-label="캘린더 표시 및 알림 설정">
         <div className="quickSettingItem">
