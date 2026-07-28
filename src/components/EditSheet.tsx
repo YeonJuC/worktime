@@ -20,6 +20,9 @@ export default function EditSheet(props: {
   onClose: () => void;
   onSave: (entry: DayEntry) => void;
   femaleUsedThisMonth?: number;
+  isManualHoliday?: boolean;
+  manualHolidayName?: string;
+  onSaveManualHoliday?: (enabled: boolean, name: string) => Promise<void> | void;
 }) {
   const [mode, setMode] = useState<Mode>("preset");
   const [shiftKey, setShiftKey] = useState<string>("0800-1700");
@@ -33,6 +36,8 @@ export default function EditSheet(props: {
   const [manualHours, setManualHours] = useState(8);
   const [leaveType, setLeaveType] = useState<LeaveType>("none");
   const [memo, setMemo] = useState("");
+  const [manualHolidayEnabled, setManualHolidayEnabled] = useState(false);
+  const [manualHolidayName, setManualHolidayName] = useState("회사 휴무일");
 
   const {
     visiblePresets,
@@ -46,6 +51,8 @@ export default function EditSheet(props: {
   useEffect(() => {
     if (!props.open) return;
     setManagePresets(false);
+    setManualHolidayEnabled(Boolean(props.isManualHoliday));
+    setManualHolidayName(props.manualHolidayName || "회사 휴무일");
     const init = props.initial;
 
     if (!init) {
@@ -82,7 +89,7 @@ export default function EditSheet(props: {
             preset.breakEnd === (init.breakEnd ?? "13:00")))
     );
     setShiftKey(found?.key ?? init.preset ?? "CUSTOM");
-  }, [props.open, props.initial]);
+  }, [props.open, props.initial, props.isManualHoliday, props.manualHolidayName]);
 
   const previewHours = useMemo(() => {
     const base: Omit<DayEntry, "hours"> = {
@@ -130,7 +137,7 @@ export default function EditSheet(props: {
 
   const femaleBlocked = leaveType !== "female" && (props.femaleUsedThisMonth ?? 0) >= 1;
 
-  function save() {
+  async function save() {
     const base: Omit<DayEntry, "hours"> = {
       date: props.date,
       mode,
@@ -144,7 +151,22 @@ export default function EditSheet(props: {
       leaveType: leaveType ?? "none",
       memo,
     };
-    props.onSave({ ...base, hours: computeHours(base) });
+    const savedEntry: DayEntry = manualHolidayEnabled
+      ? {
+          ...base,
+          mode: "manual",
+          start: "",
+          end: "",
+          breakEnabled: false,
+          breakStart: "",
+          breakEnd: "",
+          manualHours: 0,
+          leaveType: "none",
+          hours: 0,
+        }
+      : { ...base, hours: computeHours(base) };
+    props.onSave(savedEntry);
+    await props.onSaveManualHoliday?.(manualHolidayEnabled, manualHolidayName.trim() || "회사 휴무일");
     props.onClose();
   }
 
@@ -160,6 +182,30 @@ export default function EditSheet(props: {
             {props.isHoliday && <div className="holidayLabel">공휴일 · {props.holidayName ?? "Holiday"}</div>}
           </div>
           <button className="btn ghost" onClick={props.onClose}>닫기</button>
+        </div>
+
+        <div className="manualHolidayBox">
+          <label className="manualHolidayToggle">
+            <input
+              type="checkbox"
+              checked={manualHolidayEnabled}
+              onChange={(event) => setManualHolidayEnabled(event.target.checked)}
+            />
+            <span className="manualHolidayCheck" aria-hidden="true" />
+            <span>
+              <strong>회사 휴무일로 지정</strong>
+              <small>노사상생의 날·창립기념일처럼 빨간 날로 표시하고 필수 근무에서 제외합니다.</small>
+            </span>
+          </label>
+          {manualHolidayEnabled && (
+            <input
+              className="input manualHolidayNameInput"
+              value={manualHolidayName}
+              maxLength={24}
+              placeholder="예: 노사상생의 날"
+              onChange={(event) => setManualHolidayName(event.target.value)}
+            />
+          )}
         </div>
 
         <div className="seg">

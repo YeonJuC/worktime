@@ -15,6 +15,7 @@ import BulkSheet from "./components/BulkSheet";
 import { useBulkPlan } from "./hooks/useBulkPlan";
 import { useLeaveSettings } from "./hooks/useLeaveSettings";
 import { useLeaveUsage } from "./hooks/useLeaveUsage";
+import { useManualHolidays } from "./hooks/useManualHolidays";
 
 function nowYM() {
   const d = new Date();
@@ -74,7 +75,12 @@ function Main(props: {
   editISO: string | null;
   setEditISO: (v: string | null) => void;
 }) {
-  const { holidays } = useHolidays(props.ym, "KR");
+  const { holidays: publicHolidays } = useHolidays(props.ym, "KR");
+  const { manualHolidays, upsertManualHoliday, removeManualHoliday } = useManualHolidays(props.uid, props.ym);
+  const holidays = useMemo(
+    () => ({ ...publicHolidays, ...manualHolidays }),
+    [publicHolidays, manualHolidays]
+  );
   const { byDate, upsert } = useMonthData(props.uid, props.ym);
   const [todayNotice, setTodayNotice] = useState<{ start: string; end: string } | null>(null);
   const [notificationSettingsOpen, setNotificationSettingsOpen] = useState(false);
@@ -275,6 +281,7 @@ function Main(props: {
 
   const editEntry = props.editISO ? byDate[props.editISO] ?? null : null;
   const editHoliday = props.editISO ? holidays[props.editISO] : undefined;
+  const editManualHoliday = props.editISO ? manualHolidays[props.editISO] : undefined;
 
   const [bulkOpen, setBulkOpen] = useState(false);
   const { plan: bulkPlan, setPlan: setBulkPlan, savePlan, resetPlan } = useBulkPlan(props.uid);
@@ -457,6 +464,7 @@ function Main(props: {
           const memo = entry?.memo ?? "";
           const range = formatWorkRange(entry ?? null);
           const isSubHoliday = !!hol?.substitute;
+          const isManualHoliday = Boolean((hol as any)?.isManual);
           const isToday = c.iso === todayISO;
           const leaveType = byDate[c.iso]?.leaveType ?? "none";
           const leaveText = leaveLabel(leaveType);
@@ -486,6 +494,12 @@ function Main(props: {
               {hol && isSubHoliday ? (
                 <div className="subLine">
                   <span className="subTag">대체</span>
+                </div>
+              ) : null}
+
+              {hol && isManualHoliday ? (
+                <div className="manualHolidayCellName" title={hol.localName}>
+                  {hol.localName}
                 </div>
               ) : null}
 
@@ -594,6 +608,19 @@ function Main(props: {
         onClose={() => props.setEditISO(null)}
         onSave={saveEntry}
         femaleUsedThisMonth={femaleUsedThisMonth}
+        isManualHoliday={Boolean(editManualHoliday)}
+        manualHolidayName={editManualHoliday?.localName}
+        onSaveManualHoliday={async (enabled, name) => {
+          if (!props.editISO) return;
+          if (enabled) {
+            await upsertManualHoliday({
+              date: props.editISO,
+              localName: name || "회사 휴무일",
+            });
+          } else if (editManualHoliday) {
+            await removeManualHoliday(props.editISO);
+          }
+        }}
       />
 
       {/* ✅ 연차 설정 팝업 */}

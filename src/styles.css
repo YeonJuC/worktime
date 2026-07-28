@@ -2899,3 +2899,68 @@ input[type="month"]{
   background: rgba(96, 165, 250, 0.08);
   border: 1px solid rgba(96, 165, 250, 0.16);
 }
+
+
+/* 회사 지정 휴무일 */
+.manualHolidayBox{
+  margin:0 16px 12px;
+  padding:14px;
+  border:1px solid rgba(255,105,125,.28);
+  border-radius:16px;
+  background:linear-gradient(135deg,rgba(255,77,109,.10),rgba(255,255,255,.035));
+}
+.manualHolidayToggle{
+  display:flex;
+  align-items:flex-start;
+  gap:11px;
+  cursor:pointer;
+  color:rgba(255,255,255,.96);
+}
+.manualHolidayToggle input{position:absolute;opacity:0;pointer-events:none}
+.manualHolidayCheck{
+  flex:0 0 auto;
+  width:22px;height:22px;
+  margin-top:1px;
+  border-radius:7px;
+  border:1.5px solid rgba(255,130,150,.65);
+  background:rgba(255,255,255,.04);
+  position:relative;
+}
+.manualHolidayToggle input:checked + .manualHolidayCheck{
+  border-color:#ff627f;
+  background:#ff4d6d;
+  box-shadow:0 0 0 4px rgba(255,77,109,.12);
+}
+.manualHolidayToggle input:checked + .manualHolidayCheck::after{
+  content:"";
+  position:absolute;
+  left:6px;top:3px;
+  width:6px;height:11px;
+  border:solid white;
+  border-width:0 2px 2px 0;
+  transform:rotate(45deg);
+}
+.manualHolidayToggle strong{display:block;font-size:14px;line-height:1.25}
+.manualHolidayToggle small{display:block;margin-top:5px;color:rgba(255,255,255,.58);font-size:11px;line-height:1.4}
+.manualHolidayNameInput{margin-top:12px}
+.cell.holiday .memoLine{color:rgba(255,143,158,.92)}
+@media(max-width:430px){
+  .manualHolidayBox{margin-left:12px;margin-right:12px;padding:12px}
+  .manualHolidayToggle strong{font-size:13px}
+  .manualHolidayToggle small{font-size:10.5px}
+}
+
+.manualHolidayCellName{
+  margin-top:4px;
+  color:#ff7d93;
+  font-size:clamp(9px,2.55vw,12px);
+  line-height:1.15;
+  font-weight:750;
+  letter-spacing:-.03em;
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  overflow:hidden;
+  word-break:keep-all;
+}
+.dailyHoursHidden .manualHolidayCellName{font-size:clamp(10px,2.8vw,13px)}
