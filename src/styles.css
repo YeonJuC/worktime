@@ -2348,3 +2348,188 @@ input[type="month"]{
   }
   .dailyHoursHidden .leaveLine{ min-height:15px; }
 }
+
+/* ===== 일일 합계 숨김 모드 최종 레이아웃 =====
+   합계가 사라진 공간을 날짜/근무구간/일정/휴가가 균형 있게 사용합니다. */
+@media (max-width: 448px){
+  .dailyHoursHidden .grid{
+    grid-auto-rows:104px;
+  }
+
+  .dailyHoursHidden .cell{
+    height:100%;
+    min-height:0;
+    box-sizing:border-box;
+    padding:7px 5px 6px;
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-start;
+    align-items:stretch;
+    gap:3px;
+    overflow:hidden;
+  }
+
+  .dailyHoursHidden .cellTop{
+    flex:0 0 auto;
+    min-height:16px;
+  }
+
+  .dailyHoursHidden .dayNum{
+    font-size:15px;
+    line-height:1;
+    font-weight:900;
+  }
+
+  .dailyHoursHidden .memoLine{
+    order:2;
+    flex:0 0 auto;
+    margin:0;
+    font-size:10.5px;
+    line-height:1.16;
+    font-weight:750;
+    letter-spacing:-.25px;
+    color:rgba(255,255,255,.82);
+    white-space:normal;
+    display:-webkit-box;
+    -webkit-box-orient:vertical;
+    -webkit-line-clamp:2;
+    overflow:hidden;
+    word-break:keep-all;
+    overflow-wrap:anywhere;
+  }
+
+  .dailyHoursHidden .workRange{
+    order:3;
+    flex:0 0 auto;
+    margin:0;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    justify-content:flex-start;
+    gap:0;
+    font-size:13px;
+    line-height:1.08;
+    font-weight:900;
+    letter-spacing:-.45px;
+    white-space:normal;
+  }
+
+  .dailyHoursHidden .workRange .dash{ display:none; }
+  .dailyHoursHidden .workRange .ws,
+  .dailyHoursHidden .workRange .we{
+    display:block;
+    max-width:100%;
+    font-size:inherit;
+    line-height:inherit;
+    white-space:nowrap;
+  }
+
+  .dailyHoursHidden .leaveLine{
+    order:4;
+    flex:0 0 auto;
+    min-height:18px;
+    margin:1px 0 0;
+    overflow:visible;
+  }
+
+  .dailyHoursHidden .leavePill{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    box-sizing:border-box;
+    max-width:100%;
+    height:18px;
+    min-height:18px;
+    padding:0 6px;
+    font-size:10px;
+    line-height:1;
+    font-weight:850;
+    letter-spacing:-.25px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  /* 근무구간만 있는 일반 근무일은 남는 공간을 활용해 한 단계 크게 표시 */
+  .dailyHoursHidden .cell:has(.workRange):not(:has(.memoLine)):not(:has(.leaveLine)) .workRange{
+    margin-top:1px;
+    font-size:13.5px;
+    line-height:1.1;
+  }
+
+  /* 일정이 있는 날은 일정과 근무시간이 모두 잘 보이도록 비율 조정 */
+  .dailyHoursHidden .cell:has(.memoLine) .memoLine{
+    font-size:10.5px;
+  }
+  .dailyHoursHidden .cell:has(.memoLine) .workRange{
+    font-size:12.5px;
+  }
+
+  /* 휴가 태그가 있는 날은 근무시간·태그 간 여백을 줄여 태그가 잘리지 않게 함 */
+  .dailyHoursHidden .cell:has(.leaveLine) .workRange{
+    font-size:12.5px;
+  }
+  .dailyHoursHidden .cell:has(.leaveLine) .leaveLine{
+    margin-top:2px;
+  }
+
+  /* 일정과 휴가가 동시에 있는 가장 복잡한 셀 */
+  .dailyHoursHidden .cell:has(.memoLine):has(.leaveLine){
+    gap:2px;
+    padding-top:6px;
+    padding-bottom:5px;
+  }
+  .dailyHoursHidden .cell:has(.memoLine):has(.leaveLine) .dayNum{
+    font-size:14px;
+  }
+  .dailyHoursHidden .cell:has(.memoLine):has(.leaveLine) .memoLine{
+    font-size:9.5px;
+    line-height:1.12;
+    -webkit-line-clamp:2;
+  }
+  .dailyHoursHidden .cell:has(.memoLine):has(.leaveLine) .workRange{
+    font-size:11.5px;
+    line-height:1.05;
+  }
+  .dailyHoursHidden .cell:has(.memoLine):has(.leaveLine) .leavePill{
+    height:16px;
+    min-height:16px;
+    padding:0 5px;
+    font-size:9px;
+  }
+}
+
+@media (max-width:390px){
+  .dailyHoursHidden .grid{
+    grid-auto-rows:100px;
+  }
+  .dailyHoursHidden .cell{
+    padding:6px 4px 5px;
+    gap:2px;
+  }
+  .dailyHoursHidden .dayNum{
+    font-size:14px;
+  }
+  .dailyHoursHidden .workRange,
+  .dailyHoursHidden .cell:has(.workRange):not(:has(.memoLine)):not(:has(.leaveLine)) .workRange{
+    font-size:12px;
+    line-height:1.07;
+  }
+  .dailyHoursHidden .memoLine{
+    font-size:9.5px;
+    line-height:1.12;
+  }
+  .dailyHoursHidden .leavePill{
+    height:16px;
+    min-height:16px;
+    padding:0 5px;
+    font-size:9px;
+  }
+  .dailyHoursHidden .leaveLine{
+    min-height:16px;
+  }
+  .dailyHoursHidden .cell:has(.memoLine) .workRange,
+  .dailyHoursHidden .cell:has(.leaveLine) .workRange{
+    font-size:11.5px;
+  }
+}
