@@ -29,7 +29,7 @@ export type DayEntry = {
 
   memo?: string;
 
-  // ✅ 그날 인정 근무시간(휴가 사용 여부와 관계없이 원래 근무시간 유지)
+  // ✅ 최종 합산 시간(근무+연차)
   hours: number;
 
   updatedAt?: number;
