@@ -397,33 +397,39 @@ function Main(props: {
         </button>
       </div>
 
-      <div className="calendarViewBar glass">
-        <div>
-          <div className="calendarViewTitle">일일 근무시간 표시</div>
-          <div className="calendarViewDesc">
-            {showDailyHours ? "9.50h 같은 하루 합계 표시 중" : "하루 합계 숨김 · 셀 글씨 확대"}
+      <div className="calendarQuickSettings glass" aria-label="캘린더 표시 및 알림 설정">
+        <div className="quickSettingItem">
+          <div className="quickSettingText">
+            <div className="quickSettingTitle">일일 합계</div>
+            <div className="quickSettingDesc">{showDailyHours ? "표시 중" : "숨김"}</div>
           </div>
+          <button
+            type="button"
+            className={showDailyHours ? "quickSettingBtn active" : "quickSettingBtn"}
+            onClick={() => setShowDailyHours((visible) => !visible)}
+            aria-pressed={showDailyHours}
+          >
+            {showDailyHours ? "숨기기" : "보이기"}
+          </button>
         </div>
-        <button
-          type="button"
-          className="btn ghost calendarViewBtn"
-          onClick={() => setShowDailyHours((visible) => !visible)}
-          aria-pressed={!showDailyHours}
-        >
-          {showDailyHours ? "숨기기" : "보이기"}
-        </button>
-      </div>
 
-      <div className="notificationBar glass">
-        <div>
-          <div className="notificationBarTitle">근무시간 알림</div>
-          <div className="notificationBarDesc">
-            {notificationEnabled ? `매일 ${notificationTime} · 사용 중` : "사용 안 함"}
+        <div className="quickSettingDivider" aria-hidden="true" />
+
+        <div className="quickSettingItem">
+          <div className="quickSettingText">
+            <div className="quickSettingTitle">근무 알림</div>
+            <div className="quickSettingDesc">
+              {notificationEnabled ? `${notificationTime} 사용 중` : "사용 안 함"}
+            </div>
           </div>
+          <button
+            type="button"
+            className={notificationEnabled ? "quickSettingBtn active" : "quickSettingBtn"}
+            onClick={() => setNotificationSettingsOpen(true)}
+          >
+            설정
+          </button>
         </div>
-        <button className="btn ghost notificationSettingBtn" onClick={() => setNotificationSettingsOpen(true)}>
-          설정
-        </button>
       </div>
 
       <div className={showDailyHours ? "calendarDisplay" : "calendarDisplay dailyHoursHidden"}>
