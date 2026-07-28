@@ -285,6 +285,11 @@ export default function EditSheet(props: {
                 ))}
               </div>
               {femaleBlocked && <div className="tiny muted" style={{ marginTop: 8 }}>* 여성휴가는 매달 1회만 사용 가능해요.</div>}
+              {leaveType !== "none" && (
+                <div className="tiny muted leaveCalculationGuide" style={{ marginTop: 10 }}>
+                  휴가는 근무시간에 중복 가산되지 않습니다. 반차·반반차는 캘린더에 실제 근무 구간으로 표시되고, 연차·여성휴가는 휴가 태그만 표시됩니다.
+                </div>
+              )}
             </div>
           </div>
 

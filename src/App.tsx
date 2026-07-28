@@ -117,12 +117,15 @@ function Main(props: {
 
   useEffect(() => {
     const entry = byDate[todayISO];
-    if (!entry?.start || !entry?.end || (entry.hours ?? 0) <= 0) return;
+    const range = formatWorkRange(entry ?? null);
+    if (!entry || computeHours(entry) <= 0 || !range) return;
+
+    const [start, end] = range.split("-");
 
     // 날짜별 하루 한 번만 표시합니다. 앱/브라우저를 다시 열어도 같은 날에는 재표시하지 않습니다.
     const popupKey = `worktime-today-popup-${props.uid}-${todayISO}`;
     if (!localStorage.getItem(popupKey)) {
-      setTodayNotice({ start: entry.start, end: entry.end });
+      setTodayNotice({ start, end });
       localStorage.setItem(popupKey, "shown");
     }
   }, [byDate, props.uid, todayISO]);
@@ -143,8 +146,11 @@ function Main(props: {
 
     const checkAndNotify = () => {
       const entry = byDate[todayISO];
-      if (!entry?.start || !entry?.end || (entry.hours ?? 0) <= 0) return;
+      const range = formatWorkRange(entry ?? null);
+      if (!entry || computeHours(entry) <= 0 || !range) return;
       if (!("Notification" in window) || Notification.permission !== "granted") return;
+
+      const [noticeStart, noticeEnd] = range.split("-");
 
       const now = new Date();
       const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
@@ -155,7 +161,7 @@ function Main(props: {
 
       try {
         new Notification("오늘 근무시간 안내", {
-          body: `오늘 근무시간은 ${entry.start}부터 ${entry.end}까지입니다.`,
+          body: `오늘 근무시간은 ${noticeStart}부터 ${noticeEnd}까지입니다.`,
           icon: `${import.meta.env.BASE_URL}icon-192.png`,
           tag: `worktime-${todayISO}-${notificationTime}`,
         });
@@ -255,7 +261,8 @@ function Main(props: {
         else hol += 1;
       }
 
-      actual += byDate[iso]?.hours ?? 0;
+      const entry = byDate[iso];
+      actual += entry ? computeHours(entry) : 0;
     }
 
     return {
@@ -446,7 +453,7 @@ function Main(props: {
           const weekend = isWeekend(c.iso);
           const hol = holidays[c.iso];
           const entry = byDate[c.iso];
-          const hours = entry?.hours ?? 0;
+          const hours = entry ? computeHours(entry) : 0;
           const memo = entry?.memo ?? "";
           const range = formatWorkRange(entry ?? null);
           const isSubHoliday = !!hol?.substitute;

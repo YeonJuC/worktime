@@ -142,23 +142,57 @@ export function computeWorkHours(entry: Omit<DayEntry, "hours">): number {
   );
 }
 
-// ✅ 최종 합산(근무 + 연차/반차/여성휴가)
-// - leaveType은 mode와 무관하게 "추가로 합산"됨
+// ✅ 하루 인정시간 계산
+// 휴가는 근무시간에 무조건 더하지 않고, 부족한 시간을 8시간까지 채웁니다.
+// 예) 8h 근무 + 여성휴가 8h = 8h / 6h 근무 + 반반차 2h = 8h
+// 이미 8시간을 넘게 근무한 날은 휴가 때문에 초과시간이 더 늘어나지 않습니다.
 export function computeHours(entry: Omit<DayEntry, "hours">): number {
   const work = computeWorkHours(entry);
   const lv = leaveHours(entry.leaveType);
-  return round2(clamp(work + lv, 0, 24));
+
+  if (lv <= 0) return work;
+
+  const creditedUpToDailyTarget = Math.min(8, work + lv);
+  return round2(clamp(Math.max(work, creditedUpToDailyTarget), 0, 24));
+}
+
+function minToHHMM(totalMinutes: number) {
+  const normalized = ((totalMinutes % (24 * 60)) + 24 * 60) % (24 * 60);
+  const h = Math.floor(normalized / 60);
+  const m = normalized % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
 /**
- * ✅ 캘린더 셀 "근무 구간" 표시용
- * - 근무시간이 있으면 "start-end"
- * - leaveType은 여기서 표시하지 않음(태그로 따로 보여줄 예정)
+ * ✅ 캘린더 셀에 보이는 실제 근무 구간
+ * - 연차/여성휴가: 전일 휴가이므로 근무시간을 표시하지 않음
+ * - 오전반차: 점심 종료 이후부터 근무
+ * - 오후반차: 점심 시작 전까지만 근무
+ * - 반반차: 종료 시간을 2시간 앞당겨 표시
  */
 export function formatWorkRange(entry?: DayEntry | null): string {
-  if (!entry) return "";
-  if (entry.start && entry.end) return `${entry.start}-${entry.end}`;
-  return "";
+  if (!entry || !entry.start || !entry.end || entry.mode === "manual") return "";
+
+  const leaveType = entry.leaveType ?? "none";
+  if (leaveType === "annual" || leaveType === "female") return "";
+
+  let start = entry.start;
+  let end = entry.end;
+
+  if (leaveType === "amHalf") {
+    start = entry.breakEnabled && entry.breakEnd
+      ? entry.breakEnd
+      : minToHHMM(hhmmToMin(entry.start) + 4 * 60);
+  } else if (leaveType === "pmHalf") {
+    end = entry.breakEnabled && entry.breakStart
+      ? entry.breakStart
+      : minToHHMM(hhmmToMin(entry.end) - 4 * 60);
+  } else if (leaveType === "quarter") {
+    end = minToHHMM(hhmmToMin(entry.end) - 2 * 60);
+  }
+
+  if (hhmmToMin(start) >= hhmmToMin(end)) return "";
+  return `${start}-${end}`;
 }
 
 export function leaveLabel(leaveType?: LeaveType) {

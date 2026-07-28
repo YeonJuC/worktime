@@ -2891,3 +2891,11 @@ input[type="month"]{
   .calendarQuickSettings{column-gap:8px !important;padding:10px !important}
   .quickSettingBtn{min-width:52px;padding:7px 6px !important}
 }
+
+.leaveCalculationGuide {
+  line-height: 1.45;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(96, 165, 250, 0.08);
+  border: 1px solid rgba(96, 165, 250, 0.16);
+}
