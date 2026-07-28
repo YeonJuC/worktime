@@ -142,18 +142,21 @@ export function computeWorkHours(entry: Omit<DayEntry, "hours">): number {
   );
 }
 
-// ✅ 하루 인정시간 계산
-// 휴가는 근무시간에 무조건 더하지 않고, 부족한 시간을 8시간까지 채웁니다.
-// 예) 8h 근무 + 여성휴가 8h = 8h / 6h 근무 + 반반차 2h = 8h
-// 이미 8시간을 넘게 근무한 날은 휴가 때문에 초과시간이 더 늘어나지 않습니다.
+/**
+ * 그날 인정되는 근무시간입니다.
+ *
+ * 휴가는 원래 근무시간에 추가하거나 차감하지 않습니다.
+ * - 4시간 근무일에 오전반차를 사용하면 인정시간은 4시간
+ * - 9시간 근무일에 반반차를 사용하면 인정시간은 9시간
+ *
+ * 휴가 유형은 캘린더에 보여 줄 실제 출퇴근 구간만 조정합니다.
+ */
+export function effectiveWorkHours(entry: Omit<DayEntry, "hours">): number {
+  return computeWorkHours(entry);
+}
+
 export function computeHours(entry: Omit<DayEntry, "hours">): number {
-  const work = computeWorkHours(entry);
-  const lv = leaveHours(entry.leaveType);
-
-  if (lv <= 0) return work;
-
-  const creditedUpToDailyTarget = Math.min(8, work + lv);
-  return round2(clamp(Math.max(work, creditedUpToDailyTarget), 0, 24));
+  return effectiveWorkHours(entry);
 }
 
 function minToHHMM(totalMinutes: number) {
@@ -163,36 +166,93 @@ function minToHHMM(totalMinutes: number) {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
-/**
- * ✅ 캘린더 셀에 보이는 실제 근무 구간
- * - 연차/여성휴가: 전일 휴가이므로 근무시간을 표시하지 않음
- * - 오전반차: 점심 종료 이후부터 근무
- * - 오후반차: 점심 시작 전까지만 근무
- * - 반반차: 종료 시간을 2시간 앞당겨 표시
- */
+function workMinutesBetween(
+  startMin: number,
+  endMin: number,
+  breakEnabled: boolean,
+  breakStartMin: number,
+  breakEndMin: number
+) {
+  let total = Math.max(0, endMin - startMin);
+  if (!breakEnabled) return total;
+  const overlap = Math.max(0, Math.min(endMin, breakEndMin) - Math.max(startMin, breakStartMin));
+  return Math.max(0, total - overlap);
+}
+
+function findStartForWorkMinutes(
+  originalStart: number,
+  end: number,
+  targetWorkMinutes: number,
+  breakEnabled: boolean,
+  breakStart: number,
+  breakEnd: number
+) {
+  for (let candidate = originalStart; candidate <= end; candidate += 1) {
+    if (workMinutesBetween(candidate, end, breakEnabled, breakStart, breakEnd) <= targetWorkMinutes) {
+      return candidate;
+    }
+  }
+  return end;
+}
+
+function findEndForWorkMinutes(
+  start: number,
+  originalEnd: number,
+  targetWorkMinutes: number,
+  breakEnabled: boolean,
+  breakStart: number,
+  breakEnd: number
+) {
+  let result = start;
+  for (let candidate = start; candidate <= originalEnd; candidate += 1) {
+    if (workMinutesBetween(start, candidate, breakEnabled, breakStart, breakEnd) <= targetWorkMinutes) {
+      result = candidate;
+    } else {
+      break;
+    }
+  }
+  return result;
+}
+
+/** 캘린더 셀에 보이는 휴가 적용 후 실제 근무구간 */
 export function formatWorkRange(entry?: DayEntry | null): string {
   if (!entry || !entry.start || !entry.end || entry.mode === "manual") return "";
 
   const leaveType = entry.leaveType ?? "none";
   if (leaveType === "annual" || leaveType === "female") return "";
+  if (leaveType === "none") return `${entry.start}-${entry.end}`;
 
-  let start = entry.start;
-  let end = entry.end;
+  const rawWorkHours = computeWorkHours(entry);
+  const targetWorkHours = Math.max(0, rawWorkHours - leaveHours(leaveType));
+  if (targetWorkHours <= 0) return "";
+
+  const targetMinutes = Math.round(targetWorkHours * 60);
+  const startMin = hhmmToMin(entry.start);
+  let endMin = hhmmToMin(entry.end);
+  if (endMin < startMin) endMin += 24 * 60;
+
+  const breakEnabled = entry.breakEnabled ?? true;
+  let breakStartMin = hhmmToMin(entry.breakStart ?? "12:00");
+  let breakEndMin = hhmmToMin(entry.breakEnd ?? "13:00");
+  if (breakStartMin < startMin) breakStartMin += 24 * 60;
+  if (breakEndMin < breakStartMin) breakEndMin += 24 * 60;
+
+  let displayStart = startMin;
+  let displayEnd = endMin;
 
   if (leaveType === "amHalf") {
-    start = entry.breakEnabled && entry.breakEnd
-      ? entry.breakEnd
-      : minToHHMM(hhmmToMin(entry.start) + 4 * 60);
-  } else if (leaveType === "pmHalf") {
-    end = entry.breakEnabled && entry.breakStart
-      ? entry.breakStart
-      : minToHHMM(hhmmToMin(entry.end) - 4 * 60);
-  } else if (leaveType === "quarter") {
-    end = minToHHMM(hhmmToMin(entry.end) - 2 * 60);
+    displayStart = findStartForWorkMinutes(
+      startMin, endMin, targetMinutes, breakEnabled, breakStartMin, breakEndMin
+    );
+  } else {
+    // 오후반차와 반반차는 종료 시각을 앞당겨 표시
+    displayEnd = findEndForWorkMinutes(
+      startMin, endMin, targetMinutes, breakEnabled, breakStartMin, breakEndMin
+    );
   }
 
-  if (hhmmToMin(start) >= hhmmToMin(end)) return "";
-  return `${start}-${end}`;
+  if (displayStart >= displayEnd) return "";
+  return `${minToHHMM(displayStart)}-${minToHHMM(displayEnd)}`;
 }
 
 export function leaveLabel(leaveType?: LeaveType) {
